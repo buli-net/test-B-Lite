@@ -5,6 +5,9 @@ import android.content.Context;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.base.LegacyAddress;
 import org.bitcoinj.base.ScriptType;
+import org.bitcoinj.base.SegwitAddress;
+import org.bouncycastle.crypto.params.ECDomainParameters;
+import org.bouncycastle.math.ec.ECPoint;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.ECKey;
 import org.bitcoinj.script.Script;
@@ -43,13 +46,66 @@ public final class WalletAddressType {
             case P2WPKH:
                 return Address.fromKey(parameters, key, ScriptType.P2WPKH);
             case P2TR:
-                return Address.fromKey(parameters, key, ScriptType.P2TR);
+                return taprootAddress(parameters, key);
             case P2SH_P2WPKH:
                 return scriptForKey(parameters, key, normalized).getToAddress(parameters);
             case P2PKH:
             default:
                 return LegacyAddress.fromKey(parameters, key);
         }
+    }
+
+    /**
+     * Creates a BIP341 key-path Taproot address from the key's internal public key.
+     * bitcoinj 0.17.1 exposes ScriptType.P2TR but Address.fromKey(..., P2TR) is
+     * not implemented on the legacy Address path, so construct the BIP341 tweak
+     * explicitly and encode the resulting x-only output key as witness v1.
+     */
+    private static SegwitAddress taprootAddress(NetworkParameters parameters, ECKey key) {
+        ECDomainParameters curve = ECKey.ecDomainParameters();
+        ECPoint internalPoint = key.getPubKeyPoint().normalize();
+
+        // BIP341 uses the x-only internal key, i.e. the even-Y representative.
+        if (internalPoint.getAffineYCoord().toBigInteger().testBit(0)) {
+            internalPoint = internalPoint.negate().normalize();
+        }
+        byte[] internalX = toFixed32(internalPoint.getAffineXCoord().toBigInteger());
+
+        byte[] tweakHash = taggedHash("TapTweak", internalX);
+        java.math.BigInteger tweak = new java.math.BigInteger(1, tweakHash);
+        if (tweak.compareTo(curve.getN()) >= 0) {
+            throw new IllegalArgumentException("Invalid Taproot tweak");
+        }
+
+        ECPoint outputPoint = internalPoint.add(curve.getG().multiply(tweak)).normalize();
+        if (outputPoint.isInfinity()) {
+            throw new IllegalArgumentException("Invalid Taproot output key");
+        }
+        byte[] outputX = toFixed32(outputPoint.getAffineXCoord().toBigInteger());
+        return SegwitAddress.fromProgram(parameters, 1, outputX);
+    }
+
+    private static byte[] taggedHash(String tag, byte[] message) {
+        try {
+            java.security.MessageDigest sha256 = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] tagHash = sha256.digest(tag.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+            sha256.reset();
+            sha256.update(tagHash);
+            sha256.update(tagHash);
+            sha256.update(message);
+            return sha256.digest();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is unavailable", e);
+        }
+    }
+
+    private static byte[] toFixed32(java.math.BigInteger value) {
+        byte[] raw = value.toByteArray();
+        byte[] result = new byte[32];
+        int sourceOffset = Math.max(0, raw.length - 32);
+        int length = Math.min(raw.length, 32);
+        System.arraycopy(raw, sourceOffset, result, 32 - length, length);
+        return result;
     }
 
     public static Script scriptForKey(NetworkParameters parameters, ECKey key, String type) {
@@ -61,8 +117,7 @@ public final class WalletAddressType {
                 return ScriptBuilder.createP2SHOutputScript(
                         ScriptBuilder.createP2WPKHOutputScript(key));
             case P2TR:
-                return ScriptBuilder.createOutputScript(
-                        Address.fromKey(parameters, key, ScriptType.P2TR));
+                return ScriptBuilder.createOutputScript(taprootAddress(parameters, key));
             case P2PKH:
             default:
                 return ScriptBuilder.createP2PKHOutputScript(key);
