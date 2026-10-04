@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="?android:attr/colorBackground">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+        <androidx.appcompat.widget.Toolbar android:id="@+id/toolbar_wallet_import_wif" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" android:background="?attr/colorPrimary" android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="12dp" android:background="@drawable/bg_card" android:orientation="vertical" android:padding="12dp">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/private_key_import_title" android:textStyle="bold"  android:textIsSelectable="true" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/wif_short_explanation" android:textColor="?android:attr/textColorSecondary" android:textSize="12sp"  android:textIsSelectable="true" />
+            <Button android:id="@+id/wifInfoButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:minHeight="40dp" android:text="@string/what_is_wif"
+    style="@style/WalletSecondaryButton"
+/>
+            <include layout="@layout/view_wallet_address_type_selector" />
+            <EditText android:id="@+id/privateKeyInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:hint="@string/private_key_hint" android:inputType="textNoSuggestions" android:maxLines="1" />
+            <Button android:id="@+id/scanWifQrButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/scan_wif_qr"
+    style="@style/WalletSecondaryButton"
+/>
+            <Button android:id="@+id/importPrivateKeyButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/import_private_key"
+    style="@style/WalletPrimaryButton"
+/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/importedWalletsCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/imported_wallets_title"
+                android:textStyle="bold"  android:textIsSelectable="true" />
+
+            <TextView
+                android:id="@+id/importedWalletSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/imported_wallet_total_zero"
+                android:textIsSelectable="true" />
+
+            <TextView
+                android:id="@+id/importedWalletsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:text="@string/imported_wallets_empty"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="12sp"  android:textIsSelectable="true" />
+
+            <LinearLayout
+                android:id="@+id/importedWalletsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
