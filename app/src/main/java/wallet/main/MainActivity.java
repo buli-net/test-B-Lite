@@ -515,8 +515,9 @@ public class MainActivity extends BaseActivity
                 if (i < entries.size() - 1) {
                     View divider = new View(this);
                     divider.setBackgroundResource(R.drawable.bg_divider);
+                    boolean groupBoundary = entry.kind != entries.get(i + 1).kind;
                     LinearLayout.LayoutParams dividerParams = new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT, dp(i == 0 ? 2 : 1));
+                            LinearLayout.LayoutParams.MATCH_PARENT, dp(groupBoundary ? 2 : 1));
                     dividerParams.setMargins(dp(12), dp(4), dp(12), dp(4));
                     container.addView(divider, dividerParams);
                 }
