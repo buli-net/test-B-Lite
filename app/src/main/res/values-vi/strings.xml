@@ -57,6 +57,11 @@ Hãy sử dụng ứng dụng có trách nhiệm và luôn duy trì các bản s
     <string name="sync_network_selector_title">Mạng</string>
     <string name="sync_network_selector_description">Chọn blockchain Bitcoin mà ví và bộ đồng bộ sẽ sử dụng.</string>
     <string name="sync_network_selector_storage_note">Mỗi mạng sử dụng ví và dữ liệu blockchain riêng.</string>
+    <string name="sync_mode_title">Chế độ đồng bộ</string>
+    <string name="sync_mode_lite">Nhẹ</string>
+    <string name="sync_mode_full">Toàn bộ block</string>
+    <string name="sync_mode_lite_description">Nhẹ • Chỉ tải dữ liệu đã lọc để giảm dung lượng lưu trữ và xử lý.</string>
+    <string name="sync_mode_full_description">Toàn bộ block • Tải đầy đủ giao dịch trong block để có nhiều dữ liệu blockchain hơn.</string>
     <string name="sync_network_signet">Bitcoin Signet</string>
     <string name="sync_network_switch_title">Chuyển mạng Bitcoin?</string>
     <string name="sync_network_switch_message">Mạng hiện tại vẫn giữ wallet và blockchain riêng. Chuyển sang %1$s?</string>
