@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/wallet_address_type"
+        android:textStyle="bold"
+        android:textColor="?android:attr/textColorPrimary" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="@string/wallet_address_type_help"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="12sp" />
+
+    <RadioGroup
+        android:id="@+id/walletAddressTypeGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/walletAddressTypeP2pkh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="@string/wallet_address_type_p2pkh" />
+
+        <RadioButton
+            android:id="@+id/walletAddressTypeP2wpkh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/wallet_address_type_p2wpkh" />
+
+        <RadioButton
+            android:id="@+id/walletAddressTypeP2shP2wpkh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="@string/wallet_address_type_p2sh_p2wpkh" />
+
+        <RadioButton
+            android:id="@+id/walletAddressTypeP2tr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="@string/wallet_address_type_p2tr" />
+
+    </RadioGroup>
+</LinearLayout>
