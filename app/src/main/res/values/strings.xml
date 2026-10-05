@@ -59,9 +59,9 @@ Use the application responsibly and keep independent backups of your wallet.</st
     <string name="sync_network_selector_storage_note">Each network keeps its own wallet and blockchain data.</string>
     <string name="sync_mode_title">Sync mode</string>
     <string name="sync_mode_lite">Lite</string>
-    <string name="sync_mode_full">Full Block</string>
+    <string name="sync_mode_full">Full</string>
     <string name="sync_mode_lite_description">Lite • Uses filtered blocks to keep data, storage, and processing lighter.</string>
-    <string name="sync_mode_full_description">Full Block • Downloads complete block transactions for richer blockchain data.</string>
+    <string name="sync_mode_full_description">Full • Downloads complete block transactions for richer blockchain data.</string>
     <string name="sync_mode_switch_title">Switch sync mode?</string>
     <string name="sync_mode_switch_message">The new mode will restart Bitcoin synchronization and keep the current wallet and blockchain data. Use RESCAN after switching to rebuild older history in Full Block mode.</string>
     <string name="sync_mode_switching">Switching sync mode to %1$s...</string>
