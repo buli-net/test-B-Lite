@@ -37,9 +37,9 @@ android {
     packaging {
         resources {
             excludes += [
-                    'META-INF/*.version',
-                    'META-INF/proguard/**',
-                    'META-INF/**/coroutines.pro',
+                   // 'META-INF/*.version',
+                    //'META-INF/proguard/**',
+                   // 'META-INF/**/coroutines.pro',
                     '**/*.proto',
                     'org/bouncycastle/**/*.properties',
                     'org/bitcoinj/crypto/cacerts',
