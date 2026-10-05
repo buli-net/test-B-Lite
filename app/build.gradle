@@ -40,7 +40,7 @@ android {
                    // 'META-INF/*.version',
                     //'META-INF/proguard/**',
                    // 'META-INF/**/coroutines.pro',
-                    '**/*.proto',
+                  //  '**/*.proto',
                     'org/bouncycastle/**/*.properties',
                     'org/bitcoinj/crypto/cacerts',
                     'org.bitcoin.*.checkpoints.txt'
