@@ -30,7 +30,7 @@ B-Lite is a lightweight, open-source Bitcoin wallet for Android, built with Bitc
   View wallet transaction history.
 
 - 🔄 Synchronization
-  Synchronize wallet data with the Bitcoin network.
+  Synchronize wallet data with Bitcoin Mainnet or Signet. Mainnet and Signet each support Lite and Full Block sync modes.
 
 - 🌓 System Theme
   Automatically follows the Android light/dark system theme.
@@ -68,11 +68,15 @@ Watch-only addresses do not contain private keys and cannot be used to spend Bit
 
 🌐 Network
 
-B-Lite is designed for:
+B-Lite supports:
 
 Bitcoin Mainnet
+Bitcoin Signet
 
-«Testnet and Signet are not used by the production wallet.»
+Each network keeps separate wallet and blockchain storage. Sync mode can be selected independently per network:
+
+- Lite: filtered block synchronization with lower data and resource usage.
+- Full Block: complete block transaction download for richer blockchain data.
 
 ---
 
