@@ -48,11 +48,11 @@
 # bitcoinj network parameter implementations must remain available at runtime.
 # Signet is resolved through bitcoinj's network factory and can otherwise be
 # removed/renamed by R8 on Android release builds.
-# keep class org.bitcoinj.params.BitcoinNetworkParams { *; }
+-keep class org.bitcoinj.params.BitcoinNetworkParams { *; }
 -keep class org.bitcoinj.params.MainNetParams { *; }
 -keep class org.bitcoinj.params.SigNetParams { *; }
-# keep class org.bitcoinj.params.RegTestParams { *; }
-# keep class org.bitcoinj.params.TestNet3Params { *; }
+-keep class org.bitcoinj.params.RegTestParams { *; }
+-keep class org.bitcoinj.params.TestNet3Params { *; }
 
 # bitcoinj 0.17.1 protobuf classes are generated under org.bitcoinj.protobuf.wallet.
 -keep,includedescriptorclasses class org.bitcoinj.protobuf.wallet.Protos$** { *; }
