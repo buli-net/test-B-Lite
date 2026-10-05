@@ -58,10 +58,15 @@ Hãy sử dụng ứng dụng có trách nhiệm và luôn duy trì các bản s
     <string name="sync_network_selector_description">Chọn blockchain Bitcoin mà ví và bộ đồng bộ sẽ sử dụng.</string>
     <string name="sync_network_selector_storage_note">Mỗi mạng sử dụng ví và dữ liệu blockchain riêng.</string>
     <string name="sync_mode_title">Chế độ đồng bộ</string>
-    <string name="sync_mode_lite">Nhẹ</string>
-    <string name="sync_mode_full">Toàn bộ block</string>
-    <string name="sync_mode_lite_description">Nhẹ • Chỉ tải dữ liệu đã lọc để giảm dung lượng lưu trữ và xử lý.</string>
-    <string name="sync_mode_full_description">Toàn bộ block • Tải đầy đủ giao dịch trong block để có nhiều dữ liệu blockchain hơn.</string>
+    <string name="sync_mode_lite">Rút gọn</string>
+    <string name="sync_mode_full">Toàn bộ</string>
+    <string name="sync_mode_lite_description">Rút gọn • Chỉ tải dữ liệu đã lọc để giảm dung lượng lưu trữ và xử lý.</string>
+    <string name="sync_mode_full_description">Toàn bộ • Tải đầy đủ giao dịch trong block để có nhiều dữ liệu blockchain hơn.</string>
+    <string name="sync_mode_switch_title">Đổi chế độ đồng bộ?</string>
+    <string name="sync_mode_switch_message">Chế độ mới sẽ khởi động lại quá trình đồng bộ Bitcoin và giữ nguyên ví cùng dữ liệu blockchain hiện tại. Dùng RESCAN sau khi chuyển chế độ để xây dựng lại lịch sử cũ ở chế độ Toàn bộ block.</string>
+    <string name="sync_mode_switching">Đang chuyển chế độ đồng bộ sang %1$s...</string>
+    <string name="sync_mode_switch_busy">Đang có một thay đổi chế độ đồng bộ khác được thực hiện.</string>
+    <string name="sync_mode_switch_action">CHUYỂN</string>
     <string name="sync_network_signet">Bitcoin Signet</string>
     <string name="sync_network_switch_title">Chuyển mạng Bitcoin?</string>
     <string name="sync_network_switch_message">Mạng hiện tại vẫn giữ wallet và blockchain riêng. Chuyển sang %1$s?</string>
@@ -579,32 +584,32 @@ Không bao giờ gửi WIF cho bất kỳ ai, đưa WIF vào ảnh chụp màn h
     <string name="paper_wallet_print_type_bip38">BIP38</string>
     <string name="paper_wallet_print_type_unknown">KHÔNG XÁC ĐỊNH</string>
     <string name="paper_wallet_print_warning">CẢNH BÁO: Với khóa này, có thể chi tiêu toàn bộ coin.</string>
-    <string name="paper_wallet_export_template">Paper Wallet Bitcoin
+    <string name="paper_wallet_export_template">Ví Giấy Bitcoin
 
 
-Loại địa chỉ:
+\n\nLoại địa chỉ:
 %1$s
 
 
-Địa chỉ Bitcoin:
+\n\nĐịa chỉ Bitcoin:
 %2$s
 
 
-Hex địa chỉ:
+\n\nHex địa chỉ:
 %3$s
 
 
-Khóa riêng / BIP38:
+\n\nKhóa riêng / BIP38:
 %4$s
 
 
-Hex khóa riêng / BIP38:
+\n\nHex khóa riêng / BIP38:
 %5$s
 
 
-Hãy giữ khóa riêng an toàn. Bất kỳ ai có khóa này đều có thể chi tiêu số tiền được kiểm soát bởi khóa.
+\n\nHãy giữ khóa riêng an toàn. Bất kỳ ai có khóa này đều có thể chi tiêu số tiền được kiểm soát bởi khóa.
 </string>
-    <string name="paper_wallet_export_success">Đã xuất Paper Wallet.</string>
+    <string name="paper_wallet_export_success">Đã xuất Ví Giấy.</string>
     <string name="paper_wallet_export_failed">Không thể tạo tệp xuất.</string>
 
     <string name="sync_peers_none">Không có peer nào đang kết nối</string>
