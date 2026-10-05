@@ -13,6 +13,7 @@ import org.bitcoinj.base.BitcoinNetwork;
 import org.bitcoinj.base.Coin;
 import org.bitcoinj.base.ScriptType;
 import org.bitcoinj.core.Context;
+import org.bitcoinj.core.Block;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Transaction;
 import org.bitcoinj.core.TransactionOutput;
@@ -35,6 +36,7 @@ import java.io.InputStream;
 import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.time.Instant;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -266,28 +268,26 @@ public class MainActivityPresenter
 
                                     try {
 
-                                        peerGroup()
-                                                .setMaxConnections(
-                                                        MAX_CONNECTIONS
-                                                );
+                                        peerGroup().setMaxConnections(MAX_CONNECTIONS);
 
-                                        // Signet/Mainnet full-wallet sync must not require the
-                                        // legacy BLOOM service. Modern Bitcoin Core Signet peers
-                                        // commonly advertise WITNESS but not BLOOM, so requiring
-                                        // BLOOM leaves peers stuck in pending and never connected.
-                                        // Schildbach Wallet explicitly relaxes this requirement for
-                                        // full sync and requires only witness-capable peers.
+                                        // Match Schildbach's full-sync setup for Signet. The
+                                        // connection-filter path is the only mode that needs
+                                        // Bloom filtering; Signet uses full block sync. Leaving
+                                        // bitcoinj's Bloom mode enabled here can make modern
+                                        // Signet peers unsuitable even though they support WITNESS.
                                         if (startNetwork == BitcoinNetwork.SIGNET) {
+                                            peerGroup().setBloomFilteringEnabled(false);
                                             peerGroup().setRequiredServices(VersionMessage.NODE_WITNESS);
+                                            peerGroup().setDownloadTxDependencies(0);
                                         }
 
-                                        // Keep peer discovery bounded on mobile. A large pending
-                                        // discovery pool is unnecessary for a wallet and can create
-                                        // avoidable socket/CPU pressure during catch-up.
-                                        peerGroup()
-                                                .setMaxPeersToDiscoverCount(
-                                                        32
-                                                );
+                                        // Use the same mobile-friendly connection/discovery
+                                        // timeouts as Schildbach Wallet. Do not artificially cap
+                                        // the discovered peer pool: PeerGroup will maintain the
+                                        // requested number of live connections itself.
+                                        peerGroup().setConnectTimeout(Duration.ofSeconds(15));
+                                        peerGroup().setPeerDiscoveryTimeout(Duration.ofSeconds(5));
+                                        peerGroup().setStallThreshold(20, Block.HEADER_SIZE * 10);
 
                                     } catch (Exception ignored) {
                                         // Peer tuning is best-effort; WalletAppKit defaults remain valid.
