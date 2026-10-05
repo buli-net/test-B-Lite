@@ -51,7 +51,7 @@ public class MainActivityPresenter
 
     private static volatile MainActivityPresenter activePresenter;
 
-    private static final int MAX_CONNECTIONS = 8;
+    private static final int MAX_CONNECTIONS = 12;
 
     private static final long STALL_TIMEOUT_MS = 90_000L;
     private static final long NO_PEER_RECONNECT_TIMEOUT_MS = 45_000L;
@@ -63,7 +63,7 @@ public class MainActivityPresenter
     private static final long SYNC_NOTIFICATION_UPDATE_MS = 1000L;
     private static final long DOWNLOAD_KICK_COOLDOWN_MS = 30_000L;
 
-    private static final int MAX_AUTO_RESTARTS = 8;
+    private static final int MAX_AUTO_RESTARTS = 1440;
 
     private MainActivityContract.MainActivityView view;
 
