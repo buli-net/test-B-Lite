@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_sync"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sync_network_selector_title"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <RadioGroup
+                    android:id="@+id/syncNetworkGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/syncNetworkMainnet"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/sync_network_mainnet" />
+
+                    <RadioButton
+                        android:id="@+id/syncNetworkSignet"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/sync_network_signet" />
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/sync_network_selector_description"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="@string/sync_network_selector_storage_note"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Network overview: the main dashboard card. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sync_network_overview_title"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"  android:textIsSelectable="true" />
+
+                <TextView
+                    android:id="@+id/syncPageStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/sync_status_starting"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"  android:textIsSelectable="true" />
+
+                <TextView
+                    android:id="@+id/syncNetwork"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/sync_network_mainnet"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="13sp"  android:textIsSelectable="true" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_best_chain_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncBestChain" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_network_block_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncNetworkBlock" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_blocks_behind_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncBlocksBehind" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Dedicated sync card: neutral background so the progress bar stays visible. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sync_blockchain_sync_title"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"  android:textIsSelectable="true" />
+
+                <TextView
+                    android:id="@+id/syncPagePercent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/sync_percent_initial"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="22sp"
+                    android:textStyle="bold"  android:textIsSelectable="true" />
+
+                <ProgressBar
+                    android:id="@+id/syncPageProgress"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="8dp"
+                    android:layout_marginTop="8dp"
+                    android:max="100"
+                    android:progressTint="?attr/colorAccent" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_block_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncWalletBlock" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="/" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncTargetInline" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="0" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="7dp"
+                    android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_rate_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncRate" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_rate_initial" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/syncLiveNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/sync_live_note"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"  android:textIsSelectable="true" />
+            </LinearLayout>
+
+            <!-- Best chain / latest block. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_best_chain_title" android:textColor="?android:attr/textColorPrimary" android:textSize="18sp" android:textStyle="bold"  android:textIsSelectable="true" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/sync_chain_hash_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                <TextView android:id="@+id/syncChainHash"
+        android:maxLines="1"
+        android:ellipsize="middle"
+        android:scrollHorizontally="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:fontFamily="monospace" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textSize="12sp" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="9dp" android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_last_block_time_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncLastBlockTime" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_block_age_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncBlockAge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Network. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_network_state_title" android:textColor="?android:attr/textColorPrimary" android:textSize="18sp" android:textStyle="bold"  android:textIsSelectable="true" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_peers_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncPeers" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_pending_peers_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncPendingPeers" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_engine_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncEngine" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="7dp" android:orientation="horizontal">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/sync_restarts_label" android:textColor="?android:attr/textColorSecondary"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncRestarts" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="?android:attr/textColorPrimary" android:textStyle="bold"  android:textIsSelectable="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Live peers. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_peers_title" android:textColor="?android:attr/textColorPrimary" android:textSize="18sp" android:textStyle="bold"  android:textIsSelectable="true" />
+                <TextView android:id="@+id/syncPeerList" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:fontFamily="monospace" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textIsSelectable="true" android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Technical chain/network information remains available without competing with the primary cards. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_capabilities_title" android:textColor="?android:attr/textColorPrimary" android:textSize="18sp" android:textStyle="bold"  android:textIsSelectable="true" />
+                <TextView android:id="@+id/syncNetworkCapabilities" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:fontFamily="monospace" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textIsSelectable="true" android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_chain_technical_title" android:textColor="?android:attr/textColorPrimary" android:textSize="18sp" android:textStyle="bold"  android:textIsSelectable="true" />
+                <TextView android:id="@+id/syncChainTechnical" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:fontFamily="monospace" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textIsSelectable="true" android:textSize="12sp" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="horizontal">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_merkle_root_label" android:textColor="?android:attr/textColorSecondary" android:fontFamily="monospace" android:textSize="12sp"  android:textIsSelectable="true" />
+                    <TextView android:id="@+id/syncMerkleRoot"
+        android:maxLines="1"
+        android:ellipsize="middle"
+        android:scrollHorizontally="false" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:fontFamily="monospace" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/sync_wallet_chain_state_title" android:textColor="?android:attr/textColorPrimary" android:textSize="18sp" android:textStyle="bold"  android:textIsSelectable="true" />
+                <TextView android:id="@+id/syncWalletChainState" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:fontFamily="monospace" android:text="@string/sync_placeholder" android:textColor="?android:attr/textColorPrimary" android:textIsSelectable="true" android:textSize="12sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sync_background_title"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="18sp"
+                    android:textStyle="bold"  android:textIsSelectable="true" />
+
+                <TextView
+                    android:id="@+id/syncBackgroundStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="14sp"  android:textIsSelectable="true" />
+
+                <Button
+                    android:id="@+id/syncAllowBackgroundButton"
+                    style="@style/WalletPrimaryButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/sync_background_allow_button" />
+            </LinearLayout>
+             <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:layout_marginTop="10dp"
+                 android:orientation="horizontal">
+                 <Button
+                     android:id="@+id/syncRefreshButton"
+                     style="@style/WalletPrimaryButton"
+                     android:layout_width="0dp"
+                     android:layout_height="wrap_content"
+                     android:layout_weight="1"
+                     android:text="@string/sync_refresh" />
+                 <Space android:layout_width="6dp" android:layout_height="1dp" />
+                 <Button
+                     android:id="@+id/syncReconnectButton"
+                     style="@style/WalletPrimaryButton"
+                     android:layout_width="0dp"
+                     android:layout_height="wrap_content"
+                     android:layout_weight="1"
+                     android:text="@string/sync_reconnect" />
+                 <Space android:layout_width="6dp" android:layout_height="1dp" />
+                 <Button
+                     android:id="@+id/syncRescanButton"
+                     style="@style/WalletPrimaryButton"
+                     android:layout_width="0dp"
+                     android:layout_height="wrap_content"
+                     android:layout_weight="1"
+                     android:text="@string/sync_rescan_button" />
+             </LinearLayout>
+
+         </LinearLayout>
+     </ScrollView>
+</LinearLayout>
