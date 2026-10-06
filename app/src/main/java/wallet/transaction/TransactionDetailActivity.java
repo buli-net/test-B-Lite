@@ -518,7 +518,7 @@ public final class TransactionDetailActivity extends BaseActivity {
         // Probe the exact input/output shape using a signed transaction. This is
         // the bitcoinj equivalent of the reference wallet's dummy-sign weight pass.
         Transaction probeWithChange = buildRbfTransaction(
-                original, foreignOutputs, extraInputs, changeScript, Coin.SATOSHI);
+                wallet, original, foreignOutputs, extraInputs, changeScript, Coin.SATOSHI);
         signReplacement(wallet, probeWithChange);
         long estimatedVbytes = Math.max(1L, probeWithChange.getVsize());
 
@@ -539,7 +539,7 @@ public final class TransactionDetailActivity extends BaseActivity {
             // change output, let the remainder become fee, but only if that already
             // satisfies the user's target rate.
             Transaction noChange = buildRbfTransaction(
-                    original, foreignOutputs, extraInputs, null, null);
+                    wallet, original, foreignOutputs, extraInputs, null, null);
             signReplacement(wallet, noChange);
             return isValidFeeBump(noChange, oldFee, targetRate)
                     ? new RbfReplacement(noChange, -1)
@@ -548,6 +548,7 @@ public final class TransactionDetailActivity extends BaseActivity {
 
         for (int attempt = 0; attempt < 8; attempt++) {
             Transaction replacement = buildRbfTransaction(
+                    wallet,
                     original,
                     foreignOutputs,
                     extraInputs,
@@ -581,12 +582,13 @@ public final class TransactionDetailActivity extends BaseActivity {
     }
 
     private Transaction buildRbfTransaction(
+            Wallet wallet,
             Transaction original,
             List<TransactionOutput> foreignOutputs,
             List<TransactionOutput> extraInputs,
             byte[] changeScript,
             Coin changeValue) {
-        Transaction replacement = new Transaction(original.getParams());
+        Transaction replacement = new Transaction(wallet.getParams());
         replacement.setVersion((int) original.getVersion());
         replacement.setLockTime(original.getLockTime());
 
