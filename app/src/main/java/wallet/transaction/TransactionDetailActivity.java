@@ -272,8 +272,14 @@ public final class TransactionDetailActivity extends BaseActivity {
                 || !transaction.isOptInFullRBF() || safeFee(transaction) == null) {
             return false;
         }
-        int changeIndex = RbfMetadata.getChangeIndex(this, transaction.getTxId().toString());
-        return changeIndex >= 0 && changeIndex < transaction.getOutputs().size();
+        int changeIndex = resolveChangeIndex(transaction, wallet);
+        if (changeIndex < 0) {
+            return false;
+        }
+        if (RbfMetadata.getChangeIndex(this, transaction.getTxId().toString()) != changeIndex) {
+            RbfMetadata.recordCreated(this, transaction.getTxId().toString(), changeIndex);
+        }
+        return true;
     }
 
     private void showBoostFeeDialog() {
@@ -349,10 +355,11 @@ public final class TransactionDetailActivity extends BaseActivity {
                     }
                     oldTxid = original.getTxId().toString();
 
-                    int changeIndex = RbfMetadata.getChangeIndex(this, oldTxid);
+                    int changeIndex = resolveChangeIndex(original, wallet);
                     if (changeIndex < 0 || changeIndex >= original.getOutputs().size()) {
                         throw new IllegalStateException(getString(R.string.rbf_boost_change_unavailable));
                     }
+                    RbfMetadata.recordCreated(this, oldTxid, changeIndex);
                     TransactionOutput originalChange = original.getOutput(changeIndex);
                     if (!originalChange.isMine(wallet)
                             || WalletSelection.isWatchedOutput(wallet, originalChange)) {
@@ -394,7 +401,7 @@ public final class TransactionDetailActivity extends BaseActivity {
                         newChangeIndex = replacement.getOutputs().size() - 1;
                     }
 
-                    validateReplacement(original, replacement, wallet, targetFeeRateSatVb);
+                    validateReplacement(original, replacement, wallet, targetFeeRateSatVb, changeIndex);
 
                     SendRequest request = SendRequest.forTx(replacement);
                     request.aesKey = WalletSecurity.getSessionKey();
@@ -402,7 +409,7 @@ public final class TransactionDetailActivity extends BaseActivity {
                     wallet.signTransaction(request);
                     replacement.setPurpose(Transaction.Purpose.RAISE_FEE);
                     Transaction.verify(parameters.network(), replacement);
-                    validateReplacement(original, replacement, wallet, targetFeeRateSatVb);
+                    validateReplacement(original, replacement, wallet, targetFeeRateSatVb, changeIndex);
 
                     oldTxid = original.getTxId().toString();
                     newTxid = replacement.getTxId().toString();
@@ -517,7 +524,8 @@ public final class TransactionDetailActivity extends BaseActivity {
     }
 
     private void validateReplacement(
-            Transaction original, Transaction replacement, Wallet wallet, long targetRate) {
+            Transaction original, Transaction replacement, Wallet wallet, long targetRate,
+            int changeIndex) {
         if (!original.isOptInFullRBF()) {
             throw new IllegalStateException(getString(R.string.rbf_boost_unavailable));
         }
@@ -536,8 +544,7 @@ public final class TransactionDetailActivity extends BaseActivity {
             TransactionOutput a = original.getOutput(i);
             TransactionOutput b = replacement.getOutput(i);
             if (!java.util.Arrays.equals(a.getScriptBytes(), b.getScriptBytes())
-                    || (!isRecordedChange(original, i)
-                    && !a.getValue().equals(b.getValue()))) {
+                    || (i != changeIndex && !a.getValue().equals(b.getValue()))) {
                 throw new IllegalStateException(getString(R.string.rbf_boost_outputs_changed));
             }
         }
@@ -557,8 +564,39 @@ public final class TransactionDetailActivity extends BaseActivity {
         Transaction.verify(wallet.getNetworkParameters().network(), replacement);
     }
 
-    private boolean isRecordedChange(Transaction tx, int index) {
-        return RbfMetadata.getChangeIndex(this, tx.getTxId().toString()) == index;
+    /**
+     * Resolve the wallet change output for an RBF transaction. Metadata is preferred,
+     * but older RBF transactions may not have metadata (for example after an app
+     * reinstall or when the transaction was created by an older build). In that case
+     * accept only one unambiguous wallet-owned, spendable output. Never guess when
+     * there are multiple candidates.
+     */
+    private int resolveChangeIndex(Transaction tx, Wallet wallet) {
+        if (tx == null || wallet == null) {
+            return -1;
+        }
+
+        int recorded = RbfMetadata.getChangeIndex(this, tx.getTxId().toString());
+        if (recorded >= 0 && recorded < tx.getOutputs().size()) {
+            TransactionOutput output = tx.getOutput(recorded);
+            if (output.isMine(wallet) && !WalletSelection.isWatchedOutput(wallet, output)) {
+                return recorded;
+            }
+        }
+
+        int candidate = -1;
+        for (int i = 0; i < tx.getOutputs().size(); i++) {
+            TransactionOutput output = tx.getOutput(i);
+            if (!output.isMine(wallet) || WalletSelection.isWatchedOutput(wallet, output)) {
+                continue;
+            }
+            if (candidate >= 0) {
+                // More than one wallet-owned output: do not guess which one is change.
+                return -1;
+            }
+            candidate = i;
+        }
+        return candidate;
     }
 
     private static final class AddedInput {
