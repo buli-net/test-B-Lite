@@ -380,6 +380,10 @@ public final class TransactionDetailActivity extends BaseActivity {
                     wallet.signTransaction(probeRequest);
                     long replacementVbytes = Math.max(1L, replacementProbe.getVsize());
 
+                    // Build a fresh unsigned replacement from the original transaction.
+                    // The probe above is disposable and must never be reused after signing.
+                    Transaction replacement = copyReplacement(original, parameters);
+
                     Coin requiredFee = requiredReplacementFee(
                             oldFee, replacementVbytes, targetFeeRateSatVb);
                     Coin delta = requiredFee.subtract(oldFee);
