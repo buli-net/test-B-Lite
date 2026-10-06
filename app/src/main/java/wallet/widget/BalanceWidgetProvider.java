@@ -168,7 +168,18 @@ public final class BalanceWidgetProvider extends AppWidgetProvider {
                 MainActivity.class,
                 7101);
         views.setOnClickPendingIntent(R.id.widgetRoot, openAppPendingIntent);
-        views.setOnClickPendingIntent(R.id.widgetQr, openAppPendingIntent);
+
+        Intent qrIntent = new Intent(context, MainActivity.class)
+                .setAction(MainActivity.ACTION_SHOW_WIDGET_QR)
+                .putExtra(MainActivity.EXTRA_WIDGET_QR_ADDRESS, address)
+                .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        int qrFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            qrFlags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent qrPendingIntent = PendingIntent.getActivity(
+                context, 7102, qrIntent, qrFlags);
+        views.setOnClickPendingIntent(R.id.widgetQr, qrPendingIntent);
 
         PendingIntent sendPendingIntent = activityPendingIntent(
                 context,
