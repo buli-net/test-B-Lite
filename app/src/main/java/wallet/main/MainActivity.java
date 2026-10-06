@@ -45,6 +45,11 @@ import wallet.ui.TextViewUtils;
 public class MainActivity extends BaseActivity
         implements MainActivityContract.MainActivityView {
 
+    public static final String ACTION_SHOW_WIDGET_QR =
+            "wallet.widget.action.SHOW_QR";
+    public static final String EXTRA_WIDGET_QR_ADDRESS =
+            "wallet.widget.extra.QR_ADDRESS";
+
     private final ActivityResultLauncher<ScanOptions> barcodeLauncher =
             registerForActivityResult(new ScanContract(), result -> {
                 if (!TextUtils.isEmpty(result.getContents())) {
@@ -127,6 +132,28 @@ public class MainActivity extends BaseActivity
         setupActions();
         initPresenter();
         showStartupSplash();
+        handleWidgetQrIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleWidgetQrIntent(intent);
+    }
+
+    private void handleWidgetQrIntent(Intent intent) {
+        if (intent == null || !ACTION_SHOW_WIDGET_QR.equals(intent.getAction())) {
+            return;
+        }
+        final String address = intent.getStringExtra(EXTRA_WIDGET_QR_ADDRESS);
+        intent.setAction(null);
+        if (TextUtils.isEmpty(address)) {
+            return;
+        }
+        getWindow().getDecorView().postDelayed(
+                () -> ReceiveQrDialog.show(this, address),
+                950L);
     }
 
     private void requestNotificationPermissionIfNeeded() {
