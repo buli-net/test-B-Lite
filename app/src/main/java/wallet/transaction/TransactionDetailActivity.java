@@ -357,7 +357,7 @@ public final class TransactionDetailActivity extends BaseActivity {
                         }
 
                         Transaction trial = createFeeBoostTransaction(
-                                wallet, candidate, candidate.getValue(), kit.getParams());
+                                wallet, candidate, candidate.getValue(), wallet.getNetworkParameters());
                         Coin minimumOutput = trial.getOutput(0).getMinNonDustValue();
                         Coin childFee = requiredChildFee(
                                 parentFee, parentVbytes, targetFeeRateSatVb, 192L);
@@ -374,7 +374,7 @@ public final class TransactionDetailActivity extends BaseActivity {
                             }
 
                             trial = createFeeBoostTransaction(
-                                    wallet, candidate, childValue, kit.getParams());
+                                    wallet, candidate, childValue, wallet.getNetworkParameters());
                             SendRequest request = SendRequest.forTx(trial);
                             request.aesKey = WalletSecurity.getSessionKey();
                             request.signInputs = true;
