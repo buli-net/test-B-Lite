@@ -502,6 +502,7 @@ Never send a WIF to anyone, put it in screenshots, chat messages, cloud notes, o
     <string name="transaction_id_section">Transaction ID</string>
     <string name="transaction_status_label">Status</string>
     <string name="transaction_fee_label">Fee</string>
+    <string name="transaction_fee_unavailable">Transaction fee is unavailable.</string>
     <string name="transaction_size_weight_label">Size / Weight</string>
     <string name="transaction_confirmations_label">Confirmations</string>
     <string name="transaction_time_label">Time</string>

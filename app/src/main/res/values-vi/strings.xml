@@ -502,6 +502,7 @@ Không bao giờ gửi WIF cho bất kỳ ai, đưa WIF vào ảnh chụp màn h
     <string name="transaction_id_section">ID giao dịch</string>
     <string name="transaction_status_label">Trạng thái</string>
     <string name="transaction_fee_label">Phí</string>
+    <string name="transaction_fee_unavailable">Không thể xác định phí giao dịch.</string>
     <string name="transaction_size_weight_label">Kích thước / Trọng lượng</string>
     <string name="transaction_confirmations_label">Xác nhận</string>
     <string name="transaction_time_label">Thời gian</string>
