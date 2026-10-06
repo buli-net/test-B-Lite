@@ -447,33 +447,50 @@ public final class TransactionDetailActivity extends BaseActivity {
             int changeIndex,
             Coin oldFee,
             double targetRate) {
-        Transaction trial = copyReplacement(original, wallet.getNetworkParameters());
-        signReplacement(wallet, trial);
-        long signedVbytes = Math.max(1L, trial.getVsize());
-        Coin requiredFee = requiredReplacementFee(signedVbytes, targetRate);
-        Coin feeDelta = requiredFee.subtract(oldFee);
-
         TransactionOutput originalChange = original.getOutput(changeIndex);
-        Coin newChangeValue = originalChange.getValue().subtract(feeDelta);
-        if (newChangeValue.compareTo(originalChange.getMinNonDustValue()) < 0) {
-            return null;
-        }
+        Coin changeValue = originalChange.getValue();
+        long estimatedVbytes = Math.max(1L, original.getVsize());
 
-        Transaction replacement = copyReplacement(original, wallet.getNetworkParameters());
-        replacement.replaceOutput(changeIndex, new TransactionOutput(
-                replacement,
-                newChangeValue,
-                originalChange.getScriptBytes()));
-        signReplacement(wallet, replacement);
+        // Solve the fee/change relationship to a fixed point. For SegWit, the
+        // witness size can change by a byte or two after the signature is
+        // regenerated because the DER signature length can vary. One pass is
+        // therefore not sufficient.
+        for (int attempt = 0; attempt < 8; attempt++) {
+            Coin requiredFee = requiredReplacementFee(estimatedVbytes, targetRate);
+            Coin feeDelta = requiredFee.subtract(oldFee);
+            Coin newChangeValue = changeValue.subtract(feeDelta);
+            if (newChangeValue.compareTo(originalChange.getMinNonDustValue()) < 0) {
+                return null;
+            }
 
-        long actualVbytes = Math.max(1L, replacement.getVsize());
-        Coin actualFee = safeFee(replacement);
-        Coin actualRequired = requiredReplacementFee(actualVbytes, targetRate);
-        if (actualFee == null || actualFee.compareTo(oldFee) <= 0
-                || actualFee.compareTo(actualRequired) < 0) {
-            return null;
+            Transaction replacement = copyReplacement(
+                    original, wallet.getNetworkParameters());
+            replacement.replaceOutput(changeIndex, new TransactionOutput(
+                    replacement,
+                    newChangeValue,
+                    originalChange.getScriptBytes()));
+            signReplacement(wallet, replacement);
+
+            long actualVbytes = Math.max(1L, replacement.getVsize());
+            Coin actualFee = safeFee(replacement);
+            Coin actualRequired = requiredReplacementFee(actualVbytes, targetRate);
+            if (actualFee == null || actualFee.compareTo(oldFee) <= 0) {
+                return null;
+            }
+            if (actualFee.compareTo(actualRequired) >= 0) {
+                return replacement;
+            }
+
+            // Keep the exact same output layout and take the additional fee
+            // only from the change output. Then sign again from scratch.
+            Coin extraFee = actualRequired.subtract(actualFee);
+            changeValue = newChangeValue;
+            if (extraFee.isPositive()) {
+                changeValue = changeValue.subtract(extraFee);
+            }
+            estimatedVbytes = actualVbytes;
         }
-        return replacement;
+        return null;
     }
 
     private void signReplacement(Wallet wallet, Transaction transaction) {
@@ -537,10 +554,12 @@ public final class TransactionDetailActivity extends BaseActivity {
             Address changeAddress = wallet.freshAddress(
                     org.bitcoinj.wallet.KeyChain.KeyPurpose.CHANGE);
             byte[] changeScript = ScriptBuilder.createOutputScript(changeAddress).program();
+            Coin changeValue = candidate.getValue();
+            long estimatedVbytes;
 
-            Transaction trial = copyReplacement(original, wallet.getNetworkParameters());
+            Transaction shape = copyReplacement(original, wallet.getNetworkParameters());
             TransactionInput addedInput = new TransactionInput(
-                    trial,
+                    shape,
                     new byte[0],
                     candidate.getOutPointFor(),
                     0xfffffffdL,
@@ -548,44 +567,51 @@ public final class TransactionDetailActivity extends BaseActivity {
                     null);
             addedInput.connect(
                     candidate.getParentTransaction().getOutput(candidate.getIndex()).duplicateDetached());
-            trial.addInput(addedInput);
-            trial.addOutput(new TransactionOutput(trial, Coin.SATOSHI, changeScript));
+            shape.addInput(addedInput);
+            shape.addOutput(new TransactionOutput(shape, Coin.SATOSHI, changeScript));
+            signReplacement(wallet, shape);
+            estimatedVbytes = Math.max(1L, shape.getVsize());
 
-            // The extra input makes the vsize larger. Estimate it only after
-            // signing the exact input/output shape that will be used.
-            signReplacement(wallet, trial);
-            long signedVbytes = Math.max(1L, trial.getVsize());
-            Coin requiredFee = requiredReplacementFee(signedVbytes, targetRate);
-            Coin feeDelta = requiredFee.subtract(oldFee);
-            Coin newChangeValue = candidate.getValue().subtract(feeDelta);
+            for (int attempt = 0; attempt < 8; attempt++) {
+                Coin requiredFee = requiredReplacementFee(estimatedVbytes, targetRate);
+                Coin feeDelta = requiredFee.subtract(oldFee);
+                Coin newChangeValue = changeValue.subtract(feeDelta);
 
-            TransactionOutput placeholder = trial.getOutput(trial.getOutputs().size() - 1);
-            if (newChangeValue.compareTo(placeholder.getMinNonDustValue()) < 0) {
-                continue;
+                TransactionOutput template = shape.getOutput(shape.getOutputs().size() - 1);
+                if (newChangeValue.compareTo(template.getMinNonDustValue()) < 0) {
+                    break;
+                }
+
+                Transaction replacement = copyReplacement(
+                        original, wallet.getNetworkParameters());
+                TransactionInput finalAddedInput = new TransactionInput(
+                        replacement,
+                        new byte[0],
+                        candidate.getOutPointFor(),
+                        0xfffffffdL,
+                        candidate.getValue(),
+                        null);
+                finalAddedInput.connect(
+                        candidate.getParentTransaction().getOutput(candidate.getIndex()).duplicateDetached());
+                replacement.addInput(finalAddedInput);
+                replacement.addOutput(new TransactionOutput(
+                        replacement, newChangeValue, changeScript));
+                signReplacement(wallet, replacement);
+
+                long actualVbytes = Math.max(1L, replacement.getVsize());
+                Coin actualFee = safeFee(replacement);
+                Coin actualRequired = requiredReplacementFee(actualVbytes, targetRate);
+                if (actualFee == null || actualFee.compareTo(oldFee) <= 0) {
+                    break;
+                }
+                if (actualFee.compareTo(actualRequired) >= 0) {
+                    return new AddedInput(replacement);
+                }
+
+                Coin extraFee = actualRequired.subtract(actualFee);
+                changeValue = newChangeValue.subtract(extraFee);
+                estimatedVbytes = actualVbytes;
             }
-
-            Transaction replacement = copyReplacement(original, wallet.getNetworkParameters());
-            TransactionInput finalAddedInput = new TransactionInput(
-                    replacement,
-                    new byte[0],
-                    candidate.getOutPointFor(),
-                    0xfffffffdL,
-                    candidate.getValue(),
-                    null);
-            finalAddedInput.connect(
-                    candidate.getParentTransaction().getOutput(candidate.getIndex()).duplicateDetached());
-            replacement.addInput(finalAddedInput);
-            replacement.addOutput(new TransactionOutput(replacement, newChangeValue, changeScript));
-            signReplacement(wallet, replacement);
-
-            long actualVbytes = Math.max(1L, replacement.getVsize());
-            Coin actualFee = safeFee(replacement);
-            Coin actualRequired = requiredReplacementFee(actualVbytes, targetRate);
-            if (actualFee == null || actualFee.compareTo(oldFee) <= 0
-                    || actualFee.compareTo(actualRequired) < 0) {
-                continue;
-            }
-            return new AddedInput(replacement);
         }
         return null;
     }
