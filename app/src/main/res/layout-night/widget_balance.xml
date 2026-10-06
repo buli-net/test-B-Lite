@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@android:style/Theme.DeviceDefault.DayNight"
-    android:background="@drawable/bg_widget_balance_card"
+    android:background="@drawable/bg_widget_card"
     android:clickable="true"
     android:focusable="true">
 
@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/total_balance"
-                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textColor="?android:attr/textColorSecondary"
                 android:textSize="9sp" />
 
             <TextView
@@ -40,7 +40,7 @@
                 android:layout_marginTop="2dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="9sp"
                 android:textStyle="bold" />
 
@@ -51,7 +51,7 @@
                 android:layout_marginTop="0dp"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
@@ -60,7 +60,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="3dp"
-                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textColor="?android:attr/textColorSecondary"
                 android:textSize="9sp" />
 
             <TextView
@@ -68,7 +68,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="0dp"
-                android:textColor="?android:attr/textColorPrimaryInverse"
+                android:textColor="?android:attr/textColorSecondary"
                 android:textSize="9sp" />
         </LinearLayout>
 
@@ -94,18 +94,35 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginStart="5dp"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_widget_card"
             android:clickable="true"
             android:contentDescription="@string/widget_balance_send_description"
             android:focusable="true">
 
-            <ImageView
-                android:id="@+id/widgetSendIcon"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:layout_gravity="center"
-                android:contentDescription="@string/widget_balance_send_description"
-                android:src="@drawable/ic_widget_send_24dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="4dp">
+
+                <ImageView
+                    android:id="@+id/widgetSendIcon"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@string/widget_balance_send_description"
+                    android:src="@drawable/ic_widget_send_24dp" />
+
+                <TextView
+                    android:id="@+id/widgetSendText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:text="@string/menu_send"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="9sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
         </FrameLayout>
     </LinearLayout>
 </FrameLayout>
