@@ -356,43 +356,45 @@ public final class TransactionDetailActivity extends BaseActivity {
                             continue;
                         }
 
-                        Transaction trial = createFeeBoostTransaction(
-                                wallet, candidate, candidate.getValue(), wallet.getNetworkParameters());
-                        Coin minimumOutput = trial.getOutput(0).getMinNonDustValue();
-                        Coin childFee = requiredChildFee(
-                                parentFee, parentVbytes, targetFeeRateSatVb, 192L);
-                        if (childFee.isNegative() || candidate.getValue().subtract(childFee)
-                                .compareTo(minimumOutput) < 0) {
+                        Transaction probe = createFeeBoostTransaction(
+                                wallet, candidate, candidate.getValue().subtract(Coin.valueOf(1)),
+                                wallet.getNetworkParameters());
+                        Coin minimumOutput = probe.getOutput(0).getMinNonDustValue();
+                        if (probe.getOutput(0).getValue().compareTo(minimumOutput) < 0) {
                             continue;
                         }
 
-                        for (int pass = 0; pass < 3; pass++) {
+                        Coin childFee = Coin.valueOf(1);
+                        for (int pass = 0; pass < 5; pass++) {
                             Coin childValue = candidate.getValue().subtract(childFee);
                             if (childValue.compareTo(minimumOutput) < 0) {
-                                trial = null;
+                                probe = null;
                                 break;
                             }
 
-                            trial = createFeeBoostTransaction(
+                            probe = createFeeBoostTransaction(
                                     wallet, candidate, childValue, wallet.getNetworkParameters());
-                            SendRequest request = SendRequest.forTx(trial);
+                            SendRequest request = SendRequest.forTx(probe);
                             request.aesKey = WalletSecurity.getSessionKey();
                             request.signInputs = true;
                             wallet.signTransaction(request);
 
-                            Coin actualChildFee = safeFee(trial);
+                            Coin actualChildFee = safeFee(probe);
                             if (actualChildFee == null || actualChildFee.isNegative()) {
-                                trial = null;
+                                probe = null;
                                 break;
                             }
 
-                            long childVbytes = Math.max(1L, trial.getVsize());
+                            long childVbytes = Math.max(1L, probe.getVsize());
                             Coin required = requiredChildFee(
                                     parentFee, parentVbytes, targetFeeRateSatVb, childVbytes);
-                            if (actualChildFee.compareTo(required) >= 0) {
-                                child = trial;
+                            if (actualChildFee.compareTo(required) >= 0
+                                    && isPackageFeeAtTarget(parentFee, parentVbytes,
+                                    actualChildFee, childVbytes, targetFeeRateSatVb)) {
+                                child = probe;
                                 break;
                             }
+
                             childFee = required;
                         }
 
@@ -410,11 +412,10 @@ public final class TransactionDetailActivity extends BaseActivity {
                         throw new IllegalStateException(getString(R.string.fee_boost_failed));
                     }
 
-                    long packageVbytes = Math.max(1L, parent.getVsize())
-                            + Math.max(1L, child.getVsize());
-                    long packageFeeRate = (parentFee.value + childFee.value + packageVbytes - 1L)
-                            / packageVbytes;
-                    if (packageFeeRate < targetFeeRateSatVb) {
+                    long parentVbytesFinal = Math.max(1L, parent.getVsize());
+                    long childVbytesFinal = Math.max(1L, child.getVsize());
+                    if (!isPackageFeeAtTarget(parentFee, parentVbytesFinal,
+                            childFee, childVbytesFinal, targetFeeRateSatVb)) {
                         throw new IllegalStateException(getString(R.string.fee_boost_fee_too_low));
                     }
 
@@ -468,6 +469,15 @@ public final class TransactionDetailActivity extends BaseActivity {
         long requiredPackageFee = Math.multiplyExact(packageVbytes, targetRateSatVb);
         long requiredChildFee = requiredPackageFee - parentFee.value;
         return Coin.valueOf(Math.max(1L, requiredChildFee));
+    }
+
+    private boolean isPackageFeeAtTarget(
+            Coin parentFee, long parentVbytes, Coin childFee, long childVbytes,
+            long targetRateSatVb) {
+        long packageVbytes = Math.addExact(parentVbytes, Math.max(1L, childVbytes));
+        long actualPackageFee = Math.addExact(parentFee.value, childFee.value);
+        long requiredPackageFee = Math.multiplyExact(packageVbytes, targetRateSatVb);
+        return actualPackageFee >= requiredPackageFee;
     }
 
     private TransactionOutput findSpendableOutput(
