@@ -7,13 +7,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
-import android.content.res.ColorStateList;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -133,30 +126,9 @@ public final class BalanceWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.widgetQr, View.INVISIBLE);
         }
 
-        int cardColor = resolveThemeColor(
-                context, android.R.attr.colorAccent,
-                resolveThemeColor(context, android.R.attr.colorBackground, 0));
-        int themePrimary = resolveThemeColor(context, android.R.attr.textColorPrimary, 0);
-        int themeSecondary = resolveThemeColor(context, android.R.attr.textColorSecondary, themePrimary);
-        int themeInverse = resolveThemeColor(context, android.R.attr.textColorPrimaryInverse, themeSecondary);
-        int primaryText = chooseBestContrastColor(cardColor, themePrimary, themeInverse);
-        int secondaryText = chooseBestContrastColor(cardColor, themeSecondary, primaryText);
-        int actionColor = resolveThemeColor(context, android.R.attr.colorBackground, cardColor);
-        int actionBorder = resolveThemeColor(context, android.R.attr.colorControlNormal, secondaryText);
-
-        views.setTextColor(R.id.widgetTotalTitle, secondaryText);
-        views.setTextColor(R.id.widgetNetwork, primaryText);
-        views.setTextColor(R.id.widgetBalance, primaryText);
-        views.setTextColor(R.id.widgetAvailable, secondaryText);
-        views.setTextColor(R.id.widgetPending, secondaryText);
-        views.setTextColor(R.id.widgetSendText, primaryText);
-        views.setImageViewBitmap(R.id.widgetSendIcon, createSendIconBitmap(context, primaryText, 48));
-        views.setImageViewBitmap(R.id.widgetBackground, createRoundedBitmap(
-                cardColor, 10f, 720, 160));
-        views.setImageViewBitmap(R.id.widgetQrBackground, createRoundedBitmap(
-                actionColor, 10f, 160, 160, actionBorder));
-        views.setImageViewBitmap(R.id.widgetSendBackground, createRoundedBitmap(
-                actionColor, 10f, 160, 160, actionBorder));
+        // All widget colors and shapes are resolved by the widget XML using framework theme attrs.
+        // No widget-specific palette or hard-coded colors are used here.
+        views.setImageViewResource(R.id.widgetSendIcon, R.drawable.ic_widget_send_24dp);
 
         PendingIntent openAppPendingIntent = activityPendingIntent(
                 context,
@@ -174,47 +146,6 @@ public final class BalanceWidgetProvider extends AppWidgetProvider {
         return views;
     }
 
-    private static Bitmap createSendIconBitmap(Context context, int tintColor, int sizePx) {
-        Drawable drawable = context.getDrawable(R.drawable.ic_toolbar_send_24dp);
-        if (drawable == null) {
-            return Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
-        }
-        drawable = drawable.mutate();
-        drawable.setTint(tintColor);
-        Bitmap bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, sizePx, sizePx);
-        drawable.draw(canvas);
-        return bitmap;
-    }
-
-    private static int chooseBestContrastColor(int background, int first, int second) {
-        double firstContrast = contrastRatio(background, first);
-        double secondContrast = contrastRatio(background, second);
-        return firstContrast >= secondContrast ? first : second;
-    }
-
-    private static double contrastRatio(int background, int foreground) {
-        double bg = relativeLuminance(background);
-        double fg = relativeLuminance(foreground);
-        double light = Math.max(bg, fg);
-        double dark = Math.min(bg, fg);
-        return (light + 0.05d) / (dark + 0.05d);
-    }
-
-    private static double relativeLuminance(int color) {
-        double r = linearize(Color.red(color) / 255d);
-        double g = linearize(Color.green(color) / 255d);
-        double b = linearize(Color.blue(color) / 255d);
-        return 0.2126d * r + 0.7152d * g + 0.0722d * b;
-    }
-
-    private static double linearize(double value) {
-        return value <= 0.03928d
-                ? value / 12.92d
-                : Math.pow((value + 0.055d) / 1.055d, 2.4d);
-    }
-
     private static PendingIntent activityPendingIntent(
             Context context,
             Class<?> activityClass,
@@ -228,45 +159,5 @@ public final class BalanceWidgetProvider extends AppWidgetProvider {
         return PendingIntent.getActivity(context, requestCode, intent, flags);
     }
 
-    private static int resolveThemeColor(Context context, int attrId, int fallback) {
-        try {
-            TypedValue value = new TypedValue();
-            if (!context.getTheme().resolveAttribute(attrId, value, true)) {
-                return fallback;
-            }
-            if (value.resourceId != 0) {
-                ColorStateList list = context.getResources().getColorStateList(value.resourceId, context.getTheme());
-                if (list != null) {
-                    return list.getDefaultColor();
-                }
-                return context.getResources().getColor(value.resourceId, context.getTheme());
-            }
-            return value.data;
-        } catch (Exception ignored) {
-            return fallback;
-        }
-    }
 
-    private static Bitmap createRoundedBitmap(int fillColor, float radiusDp, int widthPx, int heightPx) {
-        return createRoundedBitmap(fillColor, radiusDp, widthPx, heightPx, null);
-    }
-
-    private static Bitmap createRoundedBitmap(
-            int fillColor, float radiusDp, int widthPx, int heightPx, Integer strokeColor) {
-        Bitmap bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        float radius = radiusDp * 2.0f;
-        Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
-        fill.setColor(fillColor);
-        canvas.drawRoundRect(new RectF(0, 0, widthPx, heightPx), radius, radius, fill);
-        if (strokeColor != null) {
-            Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG);
-            stroke.setStyle(Paint.Style.STROKE);
-            stroke.setStrokeWidth(3f);
-            stroke.setColor(strokeColor);
-            canvas.drawRoundRect(new RectF(1.5f, 1.5f, widthPx - 1.5f, heightPx - 1.5f),
-                    radius, radius, stroke);
-        }
-        return bitmap;
-    }
 }
