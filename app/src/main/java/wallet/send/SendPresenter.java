@@ -277,6 +277,7 @@ public final class SendPresenter {
         final String recipient = view.recipient().trim();
         final String amountText = view.amount().trim();
         final int feeSatVb = view.feeSatVb();
+        final boolean replaceByFee = view.replaceByFee();
 
         if (TextUtils.isEmpty(recipient)) {
             releaseSend();
