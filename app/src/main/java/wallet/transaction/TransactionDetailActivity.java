@@ -314,7 +314,7 @@ public final class TransactionDetailActivity extends BaseActivity {
                         input.setError(getString(R.string.rbf_boost_invalid_fee));
                         return;
                     }
-                    int feeRate = (int) Math.ceil(parsed);
+                    double feeRate = parsed;
                     dialog.dismiss();
                     boostFee(feeRate);
                 }));
@@ -328,7 +328,7 @@ public final class TransactionDetailActivity extends BaseActivity {
      * recipient output. If the recorded change cannot fund the required fee delta,
      * a confirmed wallet UTXO is added and a fresh change output is created.
      */
-    private void boostFee(int targetFeeRateSatVb) {
+    private void boostFee(double targetFeeRateSatVb) {
         boostFeeButton.setEnabled(false);
         new Thread(() -> {
             try {
@@ -371,24 +371,22 @@ public final class TransactionDetailActivity extends BaseActivity {
                         throw new IllegalStateException(getString(R.string.transaction_fee_unavailable));
                     }
                     long oldVbytes = Math.max(1L, original.getVsize());
-                    long oldRate = (oldFee.value + oldVbytes - 1L) / oldVbytes;
+                    double oldRate = (double) oldFee.value / (double) oldVbytes;
                     if (targetFeeRateSatVb <= oldRate) {
                         throw new IllegalStateException(getString(R.string.rbf_boost_fee_not_higher));
                     }
 
                     Transaction replacement = copyReplacement(original, parameters);
-                    long replacementVbytes = Math.max(1L, replacement.getVsize());
+                    long replacementVbytes = estimateSignedVbytes(wallet, replacement);
                     Coin requiredFee = requiredReplacementFee(
-                            oldFee, replacementVbytes, targetFeeRateSatVb);
+                            replacementVbytes, targetFeeRateSatVb);
                     Coin delta = requiredFee.subtract(oldFee);
 
                     Coin changeValue = originalChange.getValue();
                     Coin minimumChange = originalChange.getMinNonDustValue();
                     if (changeValue.subtract(delta).compareTo(minimumChange) >= 0) {
                         TransactionOutput newChange = new TransactionOutput(
-                                replacement,
-                                changeValue.subtract(delta),
-                                originalChange.getScriptBytes());
+                                replacement, changeValue.subtract(delta), originalChange.getScriptBytes());
                         replacement.replaceOutput(changeIndex, newChange);
                         newChangeIndex = changeIndex;
                     } else {
@@ -401,15 +399,36 @@ public final class TransactionDetailActivity extends BaseActivity {
                         newChangeIndex = replacement.getOutputs().size() - 1;
                     }
 
-                    validateReplacement(original, replacement, wallet, targetFeeRateSatVb, changeIndex);
+                    validateReplacementStructure(original, replacement, wallet, changeIndex);
 
-                    SendRequest request = SendRequest.forTx(replacement);
-                    request.aesKey = WalletSecurity.getSessionKey();
-                    request.signInputs = true;
-                    wallet.signTransaction(request);
+                    for (int attempt = 0; attempt < 3; attempt++) {
+                        SendRequest request = SendRequest.forTx(replacement);
+                        request.aesKey = WalletSecurity.getSessionKey();
+                        request.signInputs = true;
+                        wallet.signTransaction(request);
+
+                        long actualVbytes = Math.max(1L, replacement.getVsize());
+                        Coin actualRequiredFee = requiredReplacementFee(
+                                actualVbytes, targetFeeRateSatVb);
+                        Coin actualFee = safeFee(replacement);
+                        if (actualFee != null && actualFee.compareTo(actualRequiredFee) >= 0) {
+                            break;
+                        }
+
+                        Coin additional = actualRequiredFee.subtract(
+                                actualFee == null ? oldFee : actualFee);
+                        TransactionOutput currentChange = replacement.getOutput(newChangeIndex);
+                        Coin adjustedChange = currentChange.getValue().subtract(additional);
+                        if (adjustedChange.compareTo(currentChange.getMinNonDustValue()) < 0) {
+                            throw new IllegalStateException(getString(R.string.rbf_boost_insufficient_funds));
+                        }
+                        replacement.replaceOutput(newChangeIndex, new TransactionOutput(
+                                replacement, adjustedChange, currentChange.getScriptBytes()));
+                    }
+
                     replacement.setPurpose(Transaction.Purpose.RAISE_FEE);
                     Transaction.verify(parameters.network(), replacement);
-                    validateReplacement(original, replacement, wallet, targetFeeRateSatVb, changeIndex);
+                    validateReplacement(original, replacement, wallet, targetFeeRateSatVb, newChangeIndex);
 
                     oldTxid = original.getTxId().toString();
                     newTxid = replacement.getTxId().toString();
@@ -472,17 +491,31 @@ public final class TransactionDetailActivity extends BaseActivity {
         return replacement;
     }
 
-    private Coin requiredReplacementFee(Coin oldFee, long replacementVbytes, long targetRate) {
-        // Use a conservative 1 sat/vB incremental relay allowance. Actual node
-        // policy can be higher; a higher fee rate still remains necessary.
-        long target = Math.multiplyExact(replacementVbytes, targetRate);
-        long incremental = Math.multiplyExact(replacementVbytes, 1L);
-        long minimum = Math.addExact(oldFee.value, incremental);
-        return Coin.valueOf(Math.max(target, minimum));
+    private long estimateSignedVbytes(Wallet wallet, Transaction unsigned) {
+        Transaction trial = copyReplacement(unsigned, wallet.getNetworkParameters());
+        SendRequest request = SendRequest.forTx(trial);
+        request.aesKey = WalletSecurity.getSessionKey();
+        request.signInputs = true;
+        wallet.signTransaction(request);
+        return Math.max(1L, trial.getVsize());
+    }
+
+    private Coin requiredReplacementFee(long replacementVbytes, double targetRate) {
+        if (!Double.isFinite(targetRate) || targetRate <= 0.0 || replacementVbytes <= 0L) {
+            throw new IllegalArgumentException("Invalid replacement fee rate");
+        }
+        // The requested sat/vB value is the user's target fee rate. Do not
+        // silently raise it to a hard-coded fee rate. Round only the final
+        // satoshi amount up because a transaction fee is an integer number of satoshis.
+        double target = (double) replacementVbytes * targetRate;
+        if (!Double.isFinite(target) || target > Long.MAX_VALUE) {
+            throw new IllegalArgumentException("Replacement fee is too large");
+        }
+        return Coin.valueOf((long) Math.ceil(target));
     }
 
     private AddedInput findAdditionalInput(
-            Wallet wallet, Transaction base, Coin oldFee, long targetRate) {
+            Wallet wallet, Transaction base, Coin oldFee, double targetRate) {
         java.util.HashSet<String> originalOutpoints = new java.util.HashSet<>();
         for (TransactionInput input : base.getInputs()) {
             originalOutpoints.add(input.getOutpoint().toString());
@@ -511,7 +544,7 @@ public final class TransactionDetailActivity extends BaseActivity {
             trial.addOutput(placeholder);
 
             long vbytes = Math.max(1L, trial.getVsize());
-            Coin required = requiredReplacementFee(oldFee, vbytes, targetRate);
+            Coin required = requiredReplacementFee(vbytes, targetRate);
             Coin delta = required.subtract(oldFee);
             Coin newChange = candidate.getValue().subtract(delta);
             if (newChange.compareTo(placeholder.getMinNonDustValue()) < 0) continue;
@@ -523,9 +556,8 @@ public final class TransactionDetailActivity extends BaseActivity {
         return null;
     }
 
-    private void validateReplacement(
-            Transaction original, Transaction replacement, Wallet wallet, long targetRate,
-            int changeIndex) {
+    private void validateReplacementStructure(
+            Transaction original, Transaction replacement, Wallet wallet, int changeIndex) {
         if (!original.isOptInFullRBF()) {
             throw new IllegalStateException(getString(R.string.rbf_boost_unavailable));
         }
@@ -548,18 +580,24 @@ public final class TransactionDetailActivity extends BaseActivity {
                 throw new IllegalStateException(getString(R.string.rbf_boost_outputs_changed));
             }
         }
+        if (!replacement.isOptInFullRBF()) {
+            throw new IllegalStateException(getString(R.string.rbf_boost_failed));
+        }
+    }
+
+    private void validateReplacement(
+            Transaction original, Transaction replacement, Wallet wallet, double targetRate,
+            int changeIndex) {
+        validateReplacementStructure(original, replacement, wallet, changeIndex);
         Coin oldFee = safeFee(original);
         Coin newFee = safeFee(replacement);
         if (oldFee == null || newFee == null || newFee.compareTo(oldFee) <= 0) {
             throw new IllegalStateException(getString(R.string.rbf_boost_fee_too_low));
         }
         long vbytes = Math.max(1L, replacement.getVsize());
-        Coin minimum = requiredReplacementFee(oldFee, vbytes, targetRate);
+        Coin minimum = requiredReplacementFee(vbytes, targetRate);
         if (newFee.compareTo(minimum) < 0) {
             throw new IllegalStateException(getString(R.string.rbf_boost_fee_too_low));
-        }
-        if (!replacement.isOptInFullRBF()) {
-            throw new IllegalStateException(getString(R.string.rbf_boost_failed));
         }
         Transaction.verify(wallet.getNetworkParameters().network(), replacement);
     }
