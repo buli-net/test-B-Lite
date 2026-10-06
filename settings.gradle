@@ -16,5 +16,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = 'wallet-app'
+rootProject.name = 'B-Lite'
 include ':app'
