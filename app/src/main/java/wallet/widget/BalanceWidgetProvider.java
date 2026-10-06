@@ -126,12 +126,21 @@ public final class BalanceWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.widgetQr, View.INVISIBLE);
         }
 
+        int primaryText = systemColor(context, android.R.color.primary_text_light);
+        int secondaryText = systemColor(context, android.R.color.secondary_text_light);
         boolean night = isNight(context);
-        int actionText = systemColor(context, night
-                ? android.R.color.primary_text_light
-                : android.R.color.primary_text_dark);
-        views.setInt(R.id.widgetSendIcon, "setColorFilter", actionText);
-        views.setTextColor(R.id.widgetSendText, actionText);
+        if (!night) {
+            primaryText = systemColor(context, android.R.color.primary_text_dark);
+            secondaryText = systemColor(context, android.R.color.secondary_text_dark);
+        }
+
+        views.setTextColor(R.id.widgetTotalTitle, secondaryText);
+        views.setTextColor(R.id.widgetNetwork, primaryText);
+        views.setTextColor(R.id.widgetBalance, primaryText);
+        views.setTextColor(R.id.widgetAvailable, secondaryText);
+        views.setTextColor(R.id.widgetPending, secondaryText);
+        views.setTextColor(R.id.widgetSendText, primaryText);
+        views.setInt(R.id.widgetSendIcon, "setColorFilter", primaryText);
 
         PendingIntent openAppPendingIntent = activityPendingIntent(
                 context,

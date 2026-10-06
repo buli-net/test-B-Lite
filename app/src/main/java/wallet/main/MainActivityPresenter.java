@@ -1218,6 +1218,13 @@ public class MainActivityPresenter
                     try {
                         Context.propagate(Context.getOrCreate(parameters));
                         renderSelectedWallet(currentKit.wallet());
+
+                        // Keep the home-screen widget on the exact same refresh path
+                        // as the wallet screen. The widget reads the same live
+                        // bitcoinj Wallet state, so confirmed/unconfirmed balance
+                        // changes are reflected without polling or an online API.
+                        wallet.widget.BalanceWidgetProvider.requestRefresh(applicationContext);
+
                         lastRefreshAt = System.currentTimeMillis();
                     } catch (Exception ignored) {
                         // A failed refresh will be retried by the next wallet update.
