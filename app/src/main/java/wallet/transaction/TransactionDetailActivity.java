@@ -272,26 +272,8 @@ public final class TransactionDetailActivity extends BaseActivity {
                 || !transaction.isOptInFullRBF() || safeFee(transaction) == null) {
             return false;
         }
-
-        // RBF replacement is only safe when every original input is known to the
-        // spendable wallet. This is the same prerequisite used by the reference
-        // wallet: all parents must be available before rebuilding the transaction.
-        return allOriginalInputsSpendable(transaction, wallet);
-    }
-
-    private boolean allOriginalInputsSpendable(Transaction transaction, Wallet wallet) {
-        if (transaction.getInputs().isEmpty()) {
-            return false;
-        }
-        for (TransactionInput input : transaction.getInputs()) {
-            TransactionOutput connected = input.getConnectedOutput();
-            if (connected == null
-                    || !connected.isMine(wallet)
-                    || WalletSelection.isWatchedOutput(wallet, connected)) {
-                return false;
-            }
-        }
-        return true;
+        int changeIndex = RbfMetadata.getChangeIndex(this, transaction.getTxId().toString());
+        return changeIndex >= 0 && changeIndex < transaction.getOutputs().size();
     }
 
     private void showBoostFeeDialog() {
@@ -326,7 +308,7 @@ public final class TransactionDetailActivity extends BaseActivity {
                         input.setError(getString(R.string.rbf_boost_invalid_fee));
                         return;
                     }
-                    double feeRate = parsed;
+                    int feeRate = (int) Math.ceil(parsed);
                     dialog.dismiss();
                     boostFee(feeRate);
                 }));
@@ -334,14 +316,13 @@ public final class TransactionDetailActivity extends BaseActivity {
     }
 
     /**
-     * Rebuilds an RBF transaction from its wallet inputs and non-wallet outputs.
-     * This follows the reference wallet's approach instead of modifying the old
-     * change output in place: all wallet-owned outputs are removed, the original
-     * inputs are kept, and one fresh wallet change output is added after fee
-     * calculation. Extra confirmed wallet UTXOs are added only when the original
-     * inputs cannot fund the requested target fee rate.
+     * Creates a real replacement transaction. It never guesses a change output:
+     * the exact output index is recorded when the original transaction is created.
+     * If that metadata is unavailable, the bump is refused rather than risking a
+     * recipient output. If the recorded change cannot fund the required fee delta,
+     * a confirmed wallet UTXO is added and a fresh change output is created.
      */
-    private void boostFee(double targetFeeRateSatVb) {
+    private void boostFee(int targetFeeRateSatVb) {
         boostFeeButton.setEnabled(false);
         new Thread(() -> {
             try {
@@ -350,12 +331,10 @@ public final class TransactionDetailActivity extends BaseActivity {
                 if (kit == null || parameters == null) {
                     throw new IllegalStateException(getString(R.string.wallet_not_ready));
                 }
-
                 Wallet wallet = kit.wallet();
                 String oldTxid;
                 String newTxid;
                 int newChangeIndex;
-
                 synchronized (wallet) {
                     if (wallet.isWatching()) {
                         throw new IllegalStateException(getString(R.string.rbf_boost_watch_only));
@@ -368,44 +347,76 @@ public final class TransactionDetailActivity extends BaseActivity {
                     if (original == null || !original.isPending() || !original.isOptInFullRBF()) {
                         throw new IllegalStateException(getString(R.string.rbf_boost_unavailable));
                     }
-                    if (!allOriginalInputsSpendable(original, wallet)) {
-                        throw new IllegalStateException(getString(R.string.rbf_boost_inputs_unavailable));
-                    }
                     oldTxid = original.getTxId().toString();
+
+                    int changeIndex = RbfMetadata.getChangeIndex(this, oldTxid);
+                    if (changeIndex < 0 || changeIndex >= original.getOutputs().size()) {
+                        throw new IllegalStateException(getString(R.string.rbf_boost_change_unavailable));
+                    }
+                    TransactionOutput originalChange = original.getOutput(changeIndex);
+                    if (!originalChange.isMine(wallet)
+                            || WalletSelection.isWatchedOutput(wallet, originalChange)) {
+                        throw new IllegalStateException(getString(R.string.rbf_boost_change_unavailable));
+                    }
 
                     Coin oldFee = safeFee(original);
                     if (oldFee == null || oldFee.isNegative()) {
                         throw new IllegalStateException(getString(R.string.transaction_fee_unavailable));
                     }
-
                     long oldVbytes = Math.max(1L, original.getVsize());
-                    double oldRate = (double) oldFee.value / (double) oldVbytes;
-                    if (!Double.isFinite(targetFeeRateSatVb) || targetFeeRateSatVb <= oldRate) {
+                    long oldRate = (oldFee.value + oldVbytes - 1L) / oldVbytes;
+                    if (targetFeeRateSatVb <= oldRate) {
                         throw new IllegalStateException(getString(R.string.rbf_boost_fee_not_higher));
                     }
 
-                    Script selectedImportedScript =
-                            WalletSelection.findSelectedImportedScript(this, wallet);
-                    RbfReplacement result = buildRbfReplacement(
-                            wallet,
-                            original,
-                            oldFee,
-                            targetFeeRateSatVb,
-                            selectedImportedScript);
-                    if (result == null) {
-                        throw new IllegalStateException(getString(R.string.rbf_boost_insufficient_funds));
+                    /*
+                     * Measure the real SegWit vsize from a signed disposable copy.
+                     * Measuring the unsigned replacement undercounts witness weight.
+                     */
+                    Transaction replacementProbe = copyReplacement(original, parameters);
+                    SendRequest probeRequest = SendRequest.forTx(replacementProbe);
+                    probeRequest.aesKey = WalletSecurity.getSessionKey();
+                    probeRequest.signInputs = true;
+                    wallet.signTransaction(probeRequest);
+                    long replacementVbytes = Math.max(1L, replacementProbe.getVsize());
+
+                    Coin requiredFee = requiredReplacementFee(
+                            oldFee, replacementVbytes, targetFeeRateSatVb);
+                    Coin delta = requiredFee.subtract(oldFee);
+
+                    Coin changeValue = originalChange.getValue();
+                    Coin minimumChange = originalChange.getMinNonDustValue();
+                    if (changeValue.subtract(delta).compareTo(minimumChange) >= 0) {
+                        TransactionOutput newChange = new TransactionOutput(
+                                replacement,
+                                changeValue.subtract(delta),
+                                originalChange.getScriptBytes());
+                        replacement.replaceOutput(changeIndex, newChange);
+                        newChangeIndex = changeIndex;
+                    } else {
+                        AddedInput added = findAdditionalInput(
+                                wallet, replacement, oldFee, targetFeeRateSatVb);
+                        if (added == null) {
+                            throw new IllegalStateException(getString(R.string.rbf_boost_insufficient_funds));
+                        }
+                        replacement = added.transaction;
+                        newChangeIndex = replacement.getOutputs().size() - 1;
                     }
 
-                    Transaction replacement = result.transaction;
-                    replacement.setPurpose(Transaction.Purpose.RAISE_FEE);
                     validateReplacement(original, replacement, wallet, targetFeeRateSatVb);
 
-                    newChangeIndex = result.changeIndex;
-                    newTxid = replacement.getTxId().toString();
-                    RbfMetadata.recordReplacement(this, oldTxid, newTxid, newChangeIndex);
+                    SendRequest request = SendRequest.forTx(replacement);
+                    request.aesKey = WalletSecurity.getSessionKey();
+                    request.signInputs = true;
+                    wallet.signTransaction(request);
+                    replacement.setPurpose(Transaction.Purpose.RAISE_FEE);
+                    Transaction.verify(parameters.network(), replacement);
+                    validateReplacement(original, replacement, wallet, targetFeeRateSatVb);
 
-                    // The transaction is complete and signed. Do not mutate it after this point.
+                    oldTxid = original.getTxId().toString();
+                    newTxid = replacement.getTxId().toString();
                     wallet.commitTx(replacement);
+                    RbfMetadata.recordReplacement(this, oldTxid, newTxid, newChangeIndex);
 
                     org.bitcoinj.core.TransactionBroadcast broadcast =
                             kit.peerGroup().broadcastTransaction(replacement);
@@ -438,160 +449,10 @@ public final class TransactionDetailActivity extends BaseActivity {
         }, "rbf-boost").start();
     }
 
-    private RbfReplacement buildRbfReplacement(
-            Wallet wallet,
-            Transaction original,
-            Coin oldFee,
-            double targetRate,
-            Script selectedImportedScript) {
-        List<TransactionOutput> foreignOutputs = new ArrayList<>();
-        Coin foreignValue = Coin.ZERO;
-        for (TransactionOutput output : original.getOutputs()) {
-            boolean walletOwned = output.isMine(wallet)
-                    && !WalletSelection.isWatchedOutput(wallet, output);
-            if (!walletOwned) {
-                foreignOutputs.add(output);
-                foreignValue = foreignValue.add(output.getValue());
-            }
-        }
-
-        java.util.HashSet<String> originalOutpoints = new java.util.HashSet<>();
-        for (TransactionInput input : original.getInputs()) {
-            originalOutpoints.add(input.getOutpoint().toString());
-        }
-
-        List<TransactionOutput> candidates = new ArrayList<>();
-        for (TransactionOutput output : wallet.getUnspents()) {
-            if (output == null || !output.isAvailableForSpending()) continue;
-            if (!output.isMine(wallet) || WalletSelection.isWatchedOutput(wallet, output)) continue;
-            if (output.getParentTransaction() == null || output.getParentTransactionDepthInBlocks() <= 0) continue;
-            if (originalOutpoints.contains(output.getOutPointFor().toString())) continue;
-            if (selectedImportedScript != null
-                    && !selectedImportedScript.equals(output.getScriptPubKey())) continue;
-            candidates.add(output);
-        }
-        candidates.sort((left, right) -> left.getValue().compareTo(right.getValue()));
-
-        // Keep the reference-wallet behavior: choose a fresh wallet change script
-        // once, and progressively add the smallest confirmed UTXOs only when needed.
-        Address changeAddress = wallet.freshAddress(
-                org.bitcoinj.wallet.KeyChain.KeyPurpose.CHANGE);
-        byte[] changeScript = ScriptBuilder.createOutputScript(changeAddress).program();
-
-        List<TransactionOutput> extraInputs = new ArrayList<>();
-        for (int index = -1; index < candidates.size(); index++) {
-            if (index >= 0) {
-                extraInputs.add(candidates.get(index));
-            }
-
-            RbfReplacement replacement = solveRbfWithInputs(
-                    wallet,
-                    original,
-                    foreignOutputs,
-                    foreignValue,
-                    extraInputs,
-                    oldFee,
-                    targetRate,
-                    changeScript);
-            if (replacement != null) {
-                return replacement;
-            }
-        }
-        return null;
-    }
-
-    private RbfReplacement solveRbfWithInputs(
-            Wallet wallet,
-            Transaction original,
-            List<TransactionOutput> foreignOutputs,
-            Coin foreignValue,
-            List<TransactionOutput> extraInputs,
-            Coin oldFee,
-            double targetRate,
-            byte[] changeScript) {
-        Coin totalInputs = sumReplacementInputValues(original, extraInputs);
-        Coin maximumFee = totalInputs.subtract(foreignValue);
-        if (maximumFee.isNegative()) {
-            return null;
-        }
-
-        // Probe the exact input/output shape using a signed transaction. This is
-        // the bitcoinj equivalent of the reference wallet's dummy-sign weight pass.
-        Transaction probeWithChange = buildRbfTransaction(
-                wallet, original, foreignOutputs, extraInputs, changeScript, Coin.SATOSHI);
-        signReplacement(wallet, probeWithChange);
-        long estimatedVbytes = Math.max(1L, probeWithChange.getVsize());
-
-        Coin requiredFee = requiredReplacementFee(
-                estimatedVbytes,
-                targetRate,
-                oldFee);
-        Coin changeValue = maximumFee.subtract(requiredFee);
-
-        TransactionOutput changeTemplate = new TransactionOutput(
-                probeWithChange,
-                Coin.SATOSHI,
-                changeScript);
-        Coin minChange = changeTemplate.getMinNonDustValue();
-
-        if (changeValue.compareTo(minChange) < 0) {
-            // Reference-wallet behavior: when the remainder cannot form a useful
-            // change output, let the remainder become fee, but only if that already
-            // satisfies the user's target rate.
-            Transaction noChange = buildRbfTransaction(
-                    wallet, original, foreignOutputs, extraInputs, null, null);
-            signReplacement(wallet, noChange);
-            return isValidFeeBump(noChange, oldFee, targetRate)
-                    ? new RbfReplacement(noChange, -1)
-                    : null;
-        }
-
-        for (int attempt = 0; attempt < 8; attempt++) {
-            Transaction replacement = buildRbfTransaction(
-                    wallet,
-                    original,
-                    foreignOutputs,
-                    extraInputs,
-                    changeScript,
-                    changeValue);
-            signReplacement(wallet, replacement);
-
-            long actualVbytes = Math.max(1L, replacement.getVsize());
-            Coin actualFee = calculateReplacementFee(replacement);
-            Coin actualRequired = requiredReplacementFee(actualVbytes, targetRate, oldFee);
-
-            if (actualFee.compareTo(actualRequired) >= 0
-                    && actualFee.compareTo(oldFee) > 0) {
-                int changeIndex = findReplacementChangeIndex(replacement, wallet);
-                if (changeIndex >= 0) {
-                    return new RbfReplacement(replacement, changeIndex);
-                }
-            }
-
-            if (actualFee.compareTo(actualRequired) >= 0) {
-                return new RbfReplacement(replacement, -1);
-            }
-
-            Coin extraFee = actualRequired.subtract(actualFee);
-            changeValue = changeValue.subtract(extraFee);
-            if (changeValue.compareTo(minChange) < 0) {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    private Transaction buildRbfTransaction(
-            Wallet wallet,
-            Transaction original,
-            List<TransactionOutput> foreignOutputs,
-            List<TransactionOutput> extraInputs,
-            byte[] changeScript,
-            Coin changeValue) {
-        Transaction replacement = new Transaction(wallet.getParams());
+    private Transaction copyReplacement(Transaction original, NetworkParameters parameters) {
+        Transaction replacement = new Transaction(parameters);
         replacement.setVersion((int) original.getVersion());
         replacement.setLockTime(original.getLockTime());
-
         for (TransactionInput oldInput : original.getInputs()) {
             TransactionOutput connected = oldInput.getConnectedOutput();
             if (connected == null) {
@@ -607,186 +468,117 @@ public final class TransactionDetailActivity extends BaseActivity {
             input.connect(connected.duplicateDetached());
             replacement.addInput(input);
         }
-
-        for (TransactionOutput extra : extraInputs) {
-            Transaction parent = extra.getParentTransaction();
-            if (parent == null) {
-                throw new IllegalStateException(getString(R.string.rbf_boost_inputs_unavailable));
-            }
-            TransactionInput input = new TransactionInput(
-                    replacement,
-                    new byte[0],
-                    extra.getOutPointFor(),
-                    0xfffffffdL,
-                    extra.getValue(),
-                    null);
-            input.connect(extra.duplicateDetached());
-            replacement.addInput(input);
-        }
-
-        for (TransactionOutput output : foreignOutputs) {
+        for (TransactionOutput output : original.getOutputs()) {
             replacement.addOutput(output.duplicateDetached());
-        }
-
-        if (changeScript != null && changeValue != null) {
-            replacement.addOutput(new TransactionOutput(replacement, changeValue, changeScript));
         }
         return replacement;
     }
 
-    private Coin sumReplacementInputValues(
-            Transaction original, List<TransactionOutput> extraInputs) {
-        Coin total = Coin.ZERO;
-        for (TransactionInput input : original.getInputs()) {
-            total = total.add(input.getValue());
-        }
-        for (TransactionOutput extra : extraInputs) {
-            total = total.add(extra.getValue());
-        }
-        return total;
+    private Coin requiredReplacementFee(Coin oldFee, long replacementVbytes, long targetRate) {
+        // Use a conservative 1 sat/vB incremental relay allowance. Actual node
+        // policy can be higher; a higher fee rate still remains necessary.
+        long target = Math.multiplyExact(replacementVbytes, targetRate);
+        long incremental = Math.multiplyExact(replacementVbytes, 1L);
+        long minimum = Math.addExact(oldFee.value, incremental);
+        return Coin.valueOf(Math.max(target, minimum));
     }
 
-    private Coin calculateReplacementFee(Transaction transaction) {
-        Coin inputs = Coin.ZERO;
-        for (TransactionInput input : transaction.getInputs()) {
-            inputs = inputs.add(input.getValue());
+    private AddedInput findAdditionalInput(
+            Wallet wallet, Transaction base, Coin oldFee, long targetRate) {
+        java.util.HashSet<String> originalOutpoints = new java.util.HashSet<>();
+        for (TransactionInput input : base.getInputs()) {
+            originalOutpoints.add(input.getOutpoint().toString());
         }
-        Coin outputs = Coin.ZERO;
-        for (TransactionOutput output : transaction.getOutputs()) {
-            outputs = outputs.add(output.getValue());
-        }
-        return inputs.subtract(outputs);
-    }
 
-    private boolean isValidFeeBump(
-            Transaction replacement, Coin oldFee, double targetRate) {
-        Coin actualFee = calculateReplacementFee(replacement);
-        if (actualFee.compareTo(oldFee) <= 0) {
-            return false;
-        }
-        long vbytes = Math.max(1L, replacement.getVsize());
-        Coin required = requiredReplacementFee(vbytes, targetRate, oldFee);
-        return actualFee.compareTo(required) >= 0;
-    }
+        for (TransactionOutput candidate : wallet.getUnspents()) {
+            if (candidate == null || !candidate.isAvailableForSpending()) continue;
+            if (!candidate.isMine(wallet) || WalletSelection.isWatchedOutput(wallet, candidate)) continue;
+            if (candidate.getParentTransaction() == null) continue;
+            if (candidate.getParentTransaction().getConfidence() == null
+                    || candidate.getParentTransaction().getConfidence().getDepthInBlocks() <= 0) continue;
+            if (originalOutpoints.contains(candidate.getOutPointFor())) continue;
 
-    private void signReplacement(Wallet wallet, Transaction transaction) {
-        SendRequest request = SendRequest.forTx(transaction);
-        request.aesKey = WalletSecurity.getSessionKey();
-        request.signInputs = true;
-        wallet.signTransaction(request);
-    }
+            Address changeAddress = wallet.freshAddress(org.bitcoinj.wallet.KeyChain.KeyPurpose.CHANGE);
+            Transaction trial = copyReplacement(base, wallet.getNetworkParameters());
+            TransactionInput addedInput = new TransactionInput(
+                    trial,
+                    new byte[0],
+                    candidate.getOutPointFor(),
+                    0xfffffffdL,
+                    candidate.getValue(),
+                    null);
+            addedInput.connect(candidate.getParentTransaction().getOutput(candidate.getIndex()).duplicateDetached());
+            trial.addInput(addedInput);
+            TransactionOutput placeholder = new TransactionOutput(trial, Coin.SATOSHI, ScriptBuilder.createOutputScript(changeAddress).program());
+            trial.addOutput(placeholder);
 
-    private Coin requiredReplacementFee(long replacementVbytes, double targetRate, Coin oldFee) {
-        if (!Double.isFinite(targetRate) || targetRate <= 0.0 || replacementVbytes <= 0L) {
-            throw new IllegalArgumentException("Invalid replacement fee rate");
-        }
-        double target = (double) replacementVbytes * targetRate;
-        if (!Double.isFinite(target) || target > Long.MAX_VALUE) {
-            throw new IllegalArgumentException("Replacement fee is too large");
-        }
-        long targetSats = (long) Math.ceil(target);
-        long minimumAboveOld;
-        try {
-            minimumAboveOld = Math.addExact(oldFee.value, 1L);
-        } catch (ArithmeticException error) {
-            throw new IllegalArgumentException("Replacement fee is too large", error);
-        }
-        return Coin.valueOf(Math.max(targetSats, minimumAboveOld));
-    }
+            // Measure the real vsize after signing this candidate input set.
+            SendRequest probeRequest = SendRequest.forTx(trial);
+            probeRequest.aesKey = WalletSecurity.getSessionKey();
+            probeRequest.signInputs = true;
+            wallet.signTransaction(probeRequest);
 
-    private int findReplacementChangeIndex(Transaction replacement, Wallet wallet) {
-        int index = -1;
-        for (int i = 0; i < replacement.getOutputs().size(); i++) {
-            TransactionOutput output = replacement.getOutput(i);
-            if (!output.isMine(wallet) || WalletSelection.isWatchedOutput(wallet, output)) {
-                continue;
-            }
-            if (index >= 0) {
-                return -1;
-            }
-            index = i;
+            long vbytes = Math.max(1L, trial.getVsize());
+            Coin required = requiredReplacementFee(oldFee, vbytes, targetRate);
+            Coin delta = required.subtract(oldFee);
+            Coin newChange = candidate.getValue().subtract(delta);
+            if (newChange.compareTo(placeholder.getMinNonDustValue()) < 0) continue;
+
+            trial.replaceOutput(trial.getOutputs().size() - 1,
+                    new TransactionOutput(trial, newChange, ScriptBuilder.createOutputScript(changeAddress).program()));
+            return new AddedInput(trial);
         }
-        return index;
+        return null;
     }
 
     private void validateReplacement(
-            Transaction original, Transaction replacement, Wallet wallet, double targetRate) {
-        if (!original.isOptInFullRBF() || !replacement.isOptInFullRBF()) {
-            throw new IllegalStateException(getString(R.string.rbf_boost_failed));
+            Transaction original, Transaction replacement, Wallet wallet, long targetRate) {
+        if (!original.isOptInFullRBF()) {
+            throw new IllegalStateException(getString(R.string.rbf_boost_unavailable));
         }
         if (replacement.getInputs().size() < original.getInputs().size()) {
             throw new IllegalStateException(getString(R.string.rbf_boost_failed));
         }
-
-        java.util.HashSet<String> replacementOutpoints = new java.util.HashSet<>();
-        for (TransactionInput input : replacement.getInputs()) {
-            String outpoint = input.getOutpoint().toString();
-            if (!replacementOutpoints.add(outpoint)) {
-                throw new IllegalStateException(getString(R.string.rbf_boost_inputs_unavailable));
-            }
-        }
-
-        for (TransactionInput originalInput : original.getInputs()) {
-            String outpoint = originalInput.getOutpoint().toString();
-            if (!replacementOutpoints.contains(outpoint)) {
+        for (int i = 0; i < original.getInputs().size(); i++) {
+            if (!original.getInput(i).getOutpoint().equals(replacement.getInput(i).getOutpoint())) {
                 throw new IllegalStateException(getString(R.string.rbf_boost_failed));
             }
-            for (TransactionInput replacementInput : replacement.getInputs()) {
-                if (outpoint.equals(replacementInput.getOutpoint().toString())
-                        && originalInput.getSequenceNumber() != replacementInput.getSequenceNumber()) {
-                    throw new IllegalStateException(getString(R.string.rbf_boost_failed));
-                }
+            if (original.getInput(i).getSequenceNumber() != replacement.getInput(i).getSequenceNumber()) {
+                throw new IllegalStateException(getString(R.string.rbf_boost_failed));
             }
         }
-
-        // Preserve every non-wallet output byte-for-byte and value-for-value.
-        int foreignIndex = 0;
-        for (TransactionOutput originalOutput : original.getOutputs()) {
-            boolean walletOwned = originalOutput.isMine(wallet)
-                    && !WalletSelection.isWatchedOutput(wallet, originalOutput);
-            if (walletOwned) continue;
-            if (foreignIndex >= replacement.getOutputs().size()) {
-                throw new IllegalStateException(getString(R.string.rbf_boost_outputs_changed));
-            }
-            TransactionOutput replacementOutput = replacement.getOutput(foreignIndex++);
-            if (!java.util.Arrays.equals(
-                            originalOutput.getScriptBytes(), replacementOutput.getScriptBytes())
-                    || !originalOutput.getValue().equals(replacementOutput.getValue())) {
+        for (int i = 0; i < original.getOutputs().size(); i++) {
+            TransactionOutput a = original.getOutput(i);
+            TransactionOutput b = replacement.getOutput(i);
+            if (!java.util.Arrays.equals(a.getScriptBytes(), b.getScriptBytes())
+                    || (!isRecordedChange(original, i)
+                    && !a.getValue().equals(b.getValue()))) {
                 throw new IllegalStateException(getString(R.string.rbf_boost_outputs_changed));
             }
         }
-
-        if (replacement.getOutputs().size() > foreignIndex + 1) {
-            throw new IllegalStateException(getString(R.string.rbf_boost_outputs_changed));
-        }
-        for (int i = foreignIndex; i < replacement.getOutputs().size(); i++) {
-            TransactionOutput output = replacement.getOutput(i);
-            if (!output.isMine(wallet) || WalletSelection.isWatchedOutput(wallet, output)) {
-                throw new IllegalStateException(getString(R.string.rbf_boost_outputs_changed));
-            }
-        }
-
-        Coin oldFee = calculateReplacementFee(original);
-        Coin newFee = calculateReplacementFee(replacement);
-        if (newFee.compareTo(oldFee) <= 0) {
+        Coin oldFee = safeFee(original);
+        Coin newFee = safeFee(replacement);
+        if (oldFee == null || newFee == null || newFee.compareTo(oldFee) <= 0) {
             throw new IllegalStateException(getString(R.string.rbf_boost_fee_too_low));
         }
         long vbytes = Math.max(1L, replacement.getVsize());
-        Coin minimum = requiredReplacementFee(vbytes, targetRate, oldFee);
+        Coin minimum = requiredReplacementFee(oldFee, vbytes, targetRate);
         if (newFee.compareTo(minimum) < 0) {
             throw new IllegalStateException(getString(R.string.rbf_boost_fee_too_low));
+        }
+        if (!replacement.isOptInFullRBF()) {
+            throw new IllegalStateException(getString(R.string.rbf_boost_failed));
         }
         Transaction.verify(wallet.getNetworkParameters().network(), replacement);
     }
 
-    private static final class RbfReplacement {
-        final Transaction transaction;
-        final int changeIndex;
+    private boolean isRecordedChange(Transaction tx, int index) {
+        return RbfMetadata.getChangeIndex(this, tx.getTxId().toString()) == index;
+    }
 
-        RbfReplacement(Transaction transaction, int changeIndex) {
-            this.transaction = transaction;
-            this.changeIndex = changeIndex;
-        }
+    private static final class AddedInput {
+        final Transaction transaction;
+        AddedInput(Transaction transaction) { this.transaction = transaction; }
     }
 
     private List<RowData> buildTransactionRows(Transaction transaction) {
