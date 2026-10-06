@@ -129,7 +129,9 @@ Hãy sử dụng ứng dụng có trách nhiệm và luôn duy trì các bản s
     <string name="zero_btc">0 BTC</string>
     <string name="widget_balance_description">Hiển thị số dư BTC của ví B-Lite đang được chọn. Không dùng fiat hoặc API online.</string>
     <string name="widget_balance_icon_description">Bitcoin</string>
-    <string name="widget_balance_refresh">Làm mới số dư</string>
+    <string name="widget_balance_qr_description">QR nhận Bitcoin</string>
+    <string name="widget_balance_send_description">Gửi Bitcoin</string>
+<string name="widget_balance_refresh">Làm mới số dư</string>
     <string name="widget_balance_wallet_loading">Đang tải ví</string>
     <string name="widget_balance_wallet_unavailable">Mở B-Lite để tải ví</string>
     <string name="wallet_type_main">VÍ CHÍNH</string>

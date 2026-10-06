@@ -129,7 +129,9 @@ Use the application responsibly and keep independent backups of your wallet.</st
     <string name="zero_btc">0 BTC</string>
     <string name="widget_balance_description">Shows the BTC balance of the currently selected B-Lite wallet. No fiat or online API is used.</string>
     <string name="widget_balance_icon_description">Bitcoin</string>
-    <string name="widget_balance_refresh">Refresh balance</string>
+    <string name="widget_balance_qr_description">Receive Bitcoin QR</string>
+    <string name="widget_balance_send_description">Send Bitcoin</string>
+<string name="widget_balance_refresh">Refresh balance</string>
     <string name="widget_balance_wallet_loading">Wallet loading</string>
     <string name="widget_balance_wallet_unavailable">Open B-Lite to load the wallet</string>
     <string name="wallet_type_main">MAIN WALLET</string>

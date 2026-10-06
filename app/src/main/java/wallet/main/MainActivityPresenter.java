@@ -2516,22 +2516,41 @@ public class MainActivityPresenter
     public static final class WidgetSnapshot {
         public final boolean available;
         public final String balance;
+        public final String availableBalance;
+        public final String pendingBalance;
         public final String walletLabel;
         public final String networkLabel;
+        public final String receiveAddress;
 
         public WidgetSnapshot(
                 boolean available,
                 String balance,
+                String availableBalance,
+                String pendingBalance,
                 String walletLabel,
-                String networkLabel) {
+                String networkLabel,
+                String receiveAddress) {
             this.available = available;
             this.balance = balance;
+            this.availableBalance = availableBalance;
+            this.pendingBalance = pendingBalance;
             this.walletLabel = walletLabel;
             this.networkLabel = networkLabel;
+            this.receiveAddress = receiveAddress;
         }
 
-        public static WidgetSnapshot unavailable(String balance, String walletLabel, String networkLabel) {
-            return new WidgetSnapshot(false, balance, walletLabel, networkLabel);
+        public static WidgetSnapshot unavailable(
+                String balance,
+                String walletLabel,
+                String networkLabel) {
+            return new WidgetSnapshot(
+                    false,
+                    balance,
+                    balance,
+                    balance,
+                    walletLabel,
+                    networkLabel,
+                    null);
         }
     }
 
@@ -2605,12 +2624,16 @@ public class MainActivityPresenter
                 : null;
 
         Coin balance;
+        Coin available;
+        Coin pending;
         String walletLabel;
+        String address;
 
         if (selectedWatchScript != null || selectedImportedScript != null) {
             Script displayScript = selectedWatchScript != null
                     ? selectedWatchScript : selectedImportedScript;
-            long totalSat = 0L;
+            long confirmedSat = 0L;
+            long pendingSat = 0L;
             Iterable<TransactionOutput> selectedOutputs;
             if (selectedWatchScript != null) {
                 selectedOutputs = wallet.getWatchedOutputs(false);
@@ -2624,9 +2647,16 @@ public class MainActivityPresenter
                         || !output.isAvailableForSpending()) {
                     continue;
                 }
-                totalSat += output.getValue().value;
+                if (output.getParentTransactionDepthInBlocks() > 0) {
+                    confirmedSat += output.getValue().value;
+                } else {
+                    pendingSat += output.getValue().value;
+                }
             }
-            balance = Coin.valueOf(totalSat);
+            available = Coin.valueOf(confirmedSat);
+            pending = Coin.valueOf(pendingSat);
+            balance = available.add(pending);
+            address = WalletSelection.addressForScript(displayScript, walletParameters);
 
             if (selectedWatchScript != null) {
                 walletLabel = context.getString(R.string.wallet_type_watch);
@@ -2643,15 +2673,27 @@ public class MainActivityPresenter
                 walletLabel = ImportedWalletStore.getName(context, selectedAddress, index);
             }
         } else {
+            // Keep the widget aligned with MainActivity's wallet-scoped balance.
             balance = WalletSelection.mainEstimatedBalance(wallet);
+            available = WalletSelection.mainAvailableBalance(wallet);
+            pending = balance.subtract(available);
+            address = wallet.currentReceiveAddress().toString();
             walletLabel = context.getString(R.string.wallet_type_main);
         }
+
+        String networkLabel = context.getString(
+                network == BitcoinNetwork.SIGNET
+                        ? R.string.network_badge_signet
+                        : R.string.network_badge_mainnet);
 
         return new WidgetSnapshot(
                 true,
                 balance.toFriendlyString(),
+                available.toFriendlyString(),
+                pending.toFriendlyString(),
                 walletLabel,
-                NetworkConfig.displayName(context, network));
+                networkLabel,
+                address);
     }
 
     public static MainActivityPresenter getActivePresenter() {

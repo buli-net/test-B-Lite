@@ -6,8 +6,8 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
-import android.util.TypedValue;
+import android.graphics.Bitmap;
+import android.view.View;
 import android.widget.RemoteViews;
 
 import java.util.concurrent.ExecutorService;
@@ -17,8 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import wallet.main.MainActivity;
 import wallet.main.MainActivityPresenter;
 import wallet.main.R;
+import wallet.qr.QrCodeGenerator;
+import wallet.send.SendActivity;
 
-/** Native Android home-screen widget showing the currently selected B-Lite wallet balance. */
+/** Native Android home-screen widget matching the B-Lite balance card. */
 public final class BalanceWidgetProvider extends AppWidgetProvider {
 
     public static final String ACTION_REFRESH = "wallet.widget.action.BALANCE_REFRESH";
@@ -91,55 +93,73 @@ public final class BalanceWidgetProvider extends AppWidgetProvider {
         String balance = snapshot == null || !snapshot.available
                 ? "--"
                 : snapshot.balance;
-        String wallet = snapshot == null || snapshot.walletLabel == null
-                ? context.getString(R.string.widget_balance_wallet_loading)
-                : snapshot.walletLabel;
+        String available = snapshot == null || !snapshot.available
+                ? "--"
+                : snapshot.availableBalance;
+        String pending = snapshot == null || !snapshot.available
+                ? "--"
+                : snapshot.pendingBalance;
         String network = snapshot == null || snapshot.networkLabel == null
                 ? ""
                 : snapshot.networkLabel;
+        String address = snapshot == null ? null : snapshot.receiveAddress;
 
         views.setTextViewText(R.id.widgetBalance, balance);
-        views.setTextViewText(R.id.widgetWallet, wallet);
         views.setTextViewText(R.id.widgetNetwork, network);
+        views.setTextViewText(
+                R.id.widgetAvailable,
+                context.getString(R.string.available_balance, available));
+        views.setTextViewText(
+                R.id.widgetPending,
+                context.getString(R.string.pending_balance, pending));
 
-        int primary = resolveThemeColor(
-                context, android.R.attr.textColorPrimary,
-                systemColor(context, isNight(context)
-                        ? android.R.color.primary_text_light
-                        : android.R.color.primary_text_dark));
-        int secondary = resolveThemeColor(
-                context, android.R.attr.textColorSecondary,
-                systemColor(context, isNight(context)
-                        ? android.R.color.secondary_text_light
-                        : android.R.color.secondary_text_dark));
-
-        views.setTextColor(R.id.widgetBalance, primary);
-        views.setTextColor(R.id.widgetWallet, primary);
-        views.setTextColor(R.id.widgetNetwork, secondary);
-        views.setInt(R.id.widgetBitcoinIcon, "setColorFilter", primary);
-        views.setInt(R.id.widgetRefresh, "setColorFilter", secondary);
-
-        Intent openApp = new Intent(context, MainActivity.class)
-                .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        int openFlags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            openFlags |= PendingIntent.FLAG_IMMUTABLE;
+        boolean hasAddress = address != null && !address.isEmpty();
+        if (hasAddress) {
+            try {
+                Bitmap qr = QrCodeGenerator.generate(address, 256);
+                views.setImageViewBitmap(R.id.widgetQr, qr);
+                views.setViewVisibility(R.id.widgetQr, View.VISIBLE);
+            } catch (Exception ignored) {
+                views.setViewVisibility(R.id.widgetQr, View.INVISIBLE);
+            }
+        } else {
+            views.setViewVisibility(R.id.widgetQr, View.INVISIBLE);
         }
-        PendingIntent openPendingIntent = PendingIntent.getActivity(
-                context, 7101, openApp, openFlags);
-        views.setOnClickPendingIntent(R.id.widgetRoot, openPendingIntent);
 
-        Intent refreshIntent = new Intent(context, BalanceWidgetProvider.class)
-                .setAction(ACTION_REFRESH);
-        int refreshFlags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            refreshFlags |= PendingIntent.FLAG_IMMUTABLE;
-        }
-        PendingIntent refreshPendingIntent = PendingIntent.getBroadcast(
-                context, 7102, refreshIntent, refreshFlags);
-        views.setOnClickPendingIntent(R.id.widgetRefresh, refreshPendingIntent);
+        boolean night = isNight(context);
+        int actionText = systemColor(context, night
+                ? android.R.color.primary_text_light
+                : android.R.color.primary_text_dark);
+        views.setInt(R.id.widgetSendIcon, "setColorFilter", actionText);
+        views.setTextColor(R.id.widgetSendText, actionText);
+
+        PendingIntent openAppPendingIntent = activityPendingIntent(
+                context,
+                MainActivity.class,
+                7101);
+        views.setOnClickPendingIntent(R.id.widgetRoot, openAppPendingIntent);
+        views.setOnClickPendingIntent(R.id.widgetQr, openAppPendingIntent);
+
+        PendingIntent sendPendingIntent = activityPendingIntent(
+                context,
+                SendActivity.class,
+                7103);
+        views.setOnClickPendingIntent(R.id.widgetSend, sendPendingIntent);
 
         return views;
+    }
+
+    private static PendingIntent activityPendingIntent(
+            Context context,
+            Class<?> activityClass,
+            int requestCode) {
+        Intent intent = new Intent(context, activityClass)
+                .setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        return PendingIntent.getActivity(context, requestCode, intent, flags);
     }
 
     private static boolean isNight(Context context) {
@@ -148,30 +168,11 @@ public final class BalanceWidgetProvider extends AppWidgetProvider {
         return mask == android.content.res.Configuration.UI_MODE_NIGHT_YES;
     }
 
-
     private static int systemColor(Context context, int colorResId) {
         try {
             return context.getResources().getColor(colorResId, context.getTheme());
         } catch (Exception ignored) {
             return 0;
         }
-    }
-
-    private static int resolveThemeColor(Context context, int attribute, int fallback) {
-        TypedValue value = new TypedValue();
-        Resources.Theme theme = context.getTheme();
-        if (theme != null && theme.resolveAttribute(attribute, value, true)) {
-            if (value.resourceId != 0) {
-                try {
-                    return context.getResources().getColor(value.resourceId, theme);
-                } catch (Exception ignored) {
-                }
-            }
-            if (value.type >= TypedValue.TYPE_FIRST_COLOR_INT
-                    && value.type <= TypedValue.TYPE_LAST_COLOR_INT) {
-                return value.data;
-            }
-        }
-        return fallback;
     }
 }
