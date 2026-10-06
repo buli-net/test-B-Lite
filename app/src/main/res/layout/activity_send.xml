@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar_send"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="132dp"
+                android:background="@drawable/bg_blue_card"
+                android:gravity="center_vertical"
+                android:padding="14dp">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingEnd="10dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/total_balance"
+                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textSize="14sp"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/networkBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/network_badge_mainnet"
+                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/balanceValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/zero_btc"
+                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/availableBalanceText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="7dp"
+                        android:text="@string/available_balance_loading"
+                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textSize="12sp"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/pendingBalanceText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/pending_balance_loading"
+                        android:textColor="?android:attr/textColorPrimaryInverse"
+                        android:textSize="12sp"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <ImageView
+                    android:id="@+id/receiveQr"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:clickable="true"
+                    android:contentDescription="@string/receive_qr_title"
+                    android:focusable="true"
+                    android:padding="2dp"
+                    android:scaleType="fitCenter" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_card"
+                android:gravity="center_vertical"
+                android:padding="14dp">
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/walletTypeText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/wallet_type_main"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textIsSelectable="true" />
+                        <ImageButton
+                            android:id="@+id/walletSelectorButton"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@string/wallet_selector_title"
+                            android:padding="8dp"
+                            android:src="@drawable/ic_expand_more_24dp"
+                            android:tint="?attr/colorControlNormal" />
+                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/addressText"
+                        android:maxLines="1"
+                        android:ellipsize="middle"
+                        android:scrollHorizontally="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/loading"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+                <ImageView
+                    android:id="@+id/copyAddress"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:contentDescription="@string/copy_address"
+                    android:focusable="true"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_content_copy_18dp"
+                    android:tint="?attr/colorControlNormal" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/watchCoinsPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:visibility="gone">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/watch_send_coins_title"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+                <LinearLayout
+                    android:id="@+id/watchCoinsContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/syncBlockNotice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:visibility="gone">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/send_sync_blocked"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+                <ProgressBar
+                    android:id="@+id/sendSyncProgress"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:max="100" />
+                <TextView
+                    android:id="@+id/sendSyncProgressText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="3dp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/importedTypeUnsupportedNotice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:visibility="gone">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/imported_wallet_type_not_spendable"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/sendFormPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="12dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/to_label"
+                        android:textSize="15sp"
+                        android:textIsSelectable="true" />
+                    <EditText
+                        android:id="@+id/recipientInput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:hint="@string/recipient_hint"
+                        android:inputType="textNoSuggestions"
+                        android:maxLines="2"
+                        android:textSize="13sp" />
+                    <Button
+                        android:id="@+id/addressBookButton"
+                        android:layout_width="56dp"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:text="@string/address_book_short"
+                        style="@style/WalletSecondaryButton" />
+                    <Button
+                        android:id="@+id/scanButton"
+                        android:layout_width="48dp"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:text="@string/qr"
+                        style="@style/WalletSecondaryButton" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/amount_label"
+                        android:textSize="15sp"
+                        android:textIsSelectable="true" />
+                    <EditText
+                        android:id="@+id/amountInput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:hint="@string/amount_hint"
+                        android:inputType="numberDecimal"
+                        android:textSize="15sp" />
+                    <Button
+                        android:id="@+id/maxButton"
+                        android:layout_width="56dp"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:text="@string/max"
+                        style="@style/WalletSecondaryButton" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btc_suffix"
+                        android:textSize="14sp"
+                        android:textIsSelectable="true" />
+                    <Button
+                        android:id="@+id/coinControlButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:text="@string/coin_control"
+                        style="@style/WalletSecondaryButton" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/feeRateText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/fee_rate_initial"
+                    android:textSize="15sp"
+                    android:textIsSelectable="true" />
+                <SeekBar
+                    android:id="@+id/feeSeekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/fee_rate_min"
+                        android:textSize="12sp"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/fee_rate_max"
+                        android:textSize="12sp"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/estimatedFeeText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/estimated_fee_pending"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:background="?android:attr/textColorSecondary" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/send_summary_title"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/total_debit_label"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/totalValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/send_calculated_on_send"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/remaining_balance_label"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/remainingValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/send_calculated_on_send"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/rbf_status_enabled"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textIsSelectable="true" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/sendProcessPanel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:visibility="gone">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/send_process_title"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+                <TextView
+                    android:id="@+id/processStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/send_process_preparing"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+                <TextView
+                    android:id="@+id/processCountdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+                <ProgressBar
+                    android:id="@+id/processProgress"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:max="60000"
+                    android:progress="0" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/send_process_description"
+                    android:textSize="12sp"
+                    android:textIsSelectable="true" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="10dp"
+                    android:background="?android:attr/textColorSecondary" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/send_review_recipient"
+                    android:textStyle="bold"
+                    android:textIsSelectable="true" />
+                <TextView
+                    android:id="@+id/processRecipient"
+                    android:maxLines="1"
+                    android:ellipsize="middle"
+                    android:scrollHorizontally="false"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textSize="12sp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/send_review_balance"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/processBalance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/send_review_amount"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/processAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/send_review_fee"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/processFee"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/send_review_fee_rate"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/processFeeRate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/send_review_size"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/processSize"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/send_review_total"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/processTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/send_review_remaining"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/processRemaining"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/rbf_status_enabled"
+                        android:textIsSelectable="true" />
+                    <TextView
+                        android:id="@+id/processRbf"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textStyle="bold"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+                    <Button
+                        android:id="@+id/cancelSendButton"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:text="@string/cancel"
+                        style="@style/WalletSecondaryButton" />
+                    <Button
+                        android:id="@+id/sendNowButton"
+                        style="@style/WalletPrimaryButton"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:text="@string/send_now" />
+                </LinearLayout>
+            </LinearLayout>
+            <Button
+                android:id="@+id/sendButton"
+                style="@style/WalletPrimaryButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:text="@string/send_button" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

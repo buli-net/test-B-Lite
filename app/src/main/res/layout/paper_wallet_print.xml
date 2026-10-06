@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="595dp"
+    android:layout_height="842dp">
+    <TextView
+        android:id="@+id/paperPrintTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="37dp"
+        android:text="@string/paper_wallet_print_title"
+        android:textSize="21sp"
+        android:textStyle="bold"
+        android:textIsSelectable="true" />
+    <TextView
+        android:id="@+id/paperPrintAddressLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="84dp"
+        android:textSize="11.5sp"
+        android:textStyle="bold"
+        android:textIsSelectable="true" />
+    <ImageView
+        android:id="@+id/paperPrintAddressQr"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="112dp"
+        android:contentDescription="@null"
+        android:scaleType="fitXY" />
+    <TextView
+        android:id="@+id/paperPrintAddressValue"
+        android:layout_width="523dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="344dp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textSize="10.5sp"
+        android:textIsSelectable="true" />
+    <View
+        android:id="@+id/paperPrintDivider"
+        android:layout_width="523dp"
+        android:layout_height="1dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="407dp" />
+    <TextView
+        android:id="@+id/paperPrintPrivateLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="423dp"
+        android:textSize="11.5sp"
+        android:textStyle="bold"
+        android:textIsSelectable="true" />
+    <ImageView
+        android:id="@+id/paperPrintPrivateQr"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="451dp"
+        android:contentDescription="@null"
+        android:scaleType="fitXY" />
+    <TextView
+        android:id="@+id/paperPrintPrivateValue"
+        android:layout_width="523dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="683dp"
+        android:gravity="center"
+        android:maxLines="1"
+        android:textSize="10.5sp"
+        android:textIsSelectable="true" />
+    <TextView
+        android:id="@+id/paperPrintWarning"
+        android:layout_width="523dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="49dp"
+        android:gravity="center"
+        android:text="@string/paper_wallet_print_warning"
+        android:textSize="9.5sp"
+        android:textIsSelectable="true" />
+</FrameLayout>
