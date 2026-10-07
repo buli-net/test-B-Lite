@@ -4,6 +4,9 @@
     <string name="app_name">Bitcoin Wallet</string>
     <string name="menu_scan">Scan</string>
     <string name="menu_send">Send</string>
+    <string name="shortcut_scan">Scan</string>
+    <string name="shortcut_send_coins">Send coins</string>
+    <string name="shortcut_request_coins">Request coins</string>
     <string name="menu_sync">Sync &amp; Network</string>
     <string name="menu_backup_recovery">Backup &amp; Recovery</string>
     <string name="menu_about">About</string>
