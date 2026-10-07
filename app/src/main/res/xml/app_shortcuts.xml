@@ -3,7 +3,7 @@
     <shortcut
         android:shortcutId="scan"
         android:enabled="true"
-        android:icon="@drawable/ic_toolbar_scan_24dp"
+        android:icon="@drawable/ic_shortcut_scan_24dp"
         android:shortcutShortLabel="@string/shortcut_scan"
         android:shortcutLongLabel="@string/shortcut_scan">
         <intent
@@ -14,7 +14,7 @@
     <shortcut
         android:shortcutId="send_coins"
         android:enabled="true"
-        android:icon="@drawable/ic_toolbar_send_24dp"
+        android:icon="@drawable/ic_shortcut_send_24dp"
         android:shortcutShortLabel="@string/shortcut_send_coins"
         android:shortcutLongLabel="@string/shortcut_send_coins">
         <intent
