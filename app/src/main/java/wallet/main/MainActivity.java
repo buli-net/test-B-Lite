@@ -49,6 +49,10 @@ public class MainActivity extends BaseActivity
             "wallet.widget.action.SHOW_QR";
     public static final String EXTRA_WIDGET_QR_ADDRESS =
             "wallet.widget.extra.QR_ADDRESS";
+    private static final String ACTION_SHORTCUT_SCAN =
+            "wallet.main.action.SHORTCUT_SCAN";
+    private static final String ACTION_SHORTCUT_REQUEST =
+            "wallet.main.action.SHORTCUT_REQUEST";
 
     private final ActivityResultLauncher<ScanOptions> barcodeLauncher =
             registerForActivityResult(new ScanContract(), result -> {
@@ -133,6 +137,7 @@ public class MainActivity extends BaseActivity
         initPresenter();
         showStartupSplash();
         handleWidgetQrIntent(getIntent());
+        handleShortcutIntent(getIntent());
     }
 
     @Override
@@ -140,6 +145,20 @@ public class MainActivity extends BaseActivity
         super.onNewIntent(intent);
         setIntent(intent);
         handleWidgetQrIntent(intent);
+        handleShortcutIntent(intent);
+    }
+
+    private void handleShortcutIntent(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+        String action = intent.getAction();
+        intent.setAction(null);
+        if (ACTION_SHORTCUT_SCAN.equals(action)) {
+            getWindow().getDecorView().postDelayed(this::openScanner, 950L);
+        } else if (ACTION_SHORTCUT_REQUEST.equals(action)) {
+            getWindow().getDecorView().postDelayed(this::showReceiveQr, 950L);
+        }
     }
 
     private void handleWidgetQrIntent(Intent intent) {
