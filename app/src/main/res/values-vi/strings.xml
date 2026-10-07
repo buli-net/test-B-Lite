@@ -617,4 +617,7 @@ Không bao giờ gửi WIF cho bất kỳ ai, đưa WIF vào ảnh chụp màn h
     <string name="transaction_type_input">INPUT</string>
     <string name="watch_script_type_unknown">KHÔNG XÁC ĐỊNH</string>
     <string name="transaction_fee_unavailable">Không thể xác định phí giao dịch.</string>
+    <string name="shortcut_scan">Quét</string>
+    <string name="shortcut_send_coins">Gửi Bitcoin</string>
+    <string name="shortcut_request_coins">Nhận Bitcoin</string>
 </resources>
