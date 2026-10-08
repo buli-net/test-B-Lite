@@ -107,6 +107,11 @@ public class MainActivityPresenter
 
     private volatile int lastPercent = -1;
 
+    /** Start and target heights for the current sync session. A reconnect starts a new session
+     * from the current chain tip so progress reflects only the remaining work. */
+    private volatile int syncProgressStartBlock = -1;
+    private volatile int syncProgressTargetBlock = -1;
+
     private volatile int lastChainHeight = -1;
 
     private volatile long lastProgressAt = 0L;
@@ -218,6 +223,48 @@ public class MainActivityPresenter
 
         renderCurrentState();
         startWalletKit();
+    }
+
+    /**
+     * Calculates progress for the current sync session. The session starts at the chain height
+     * already present when WalletAppKit is (re)started, so a reconnect measures only the blocks
+     * that remain instead of falling back to a whole-chain percentage.
+     */
+    private int calculateSessionProgress(int currentBlock, int peerHeight) {
+        if (currentBlock < 0) {
+            return 0;
+        }
+
+        int start = syncProgressStartBlock;
+        if (start < 0 || currentBlock < start) {
+            start = currentBlock;
+            syncProgressStartBlock = start;
+        }
+
+        int target = syncProgressTargetBlock;
+        if (target <= start && peerHeight > start) {
+            target = peerHeight;
+            syncProgressTargetBlock = target;
+        } else if (target < 0 && peerHeight > start) {
+            target = peerHeight;
+            syncProgressTargetBlock = target;
+        }
+
+        if (target <= start) {
+            return currentBlock > start ? 100 : 0;
+        }
+
+        if (currentBlock <= start) {
+            return 0;
+        }
+
+        if (currentBlock >= target) {
+            return 100;
+        }
+
+        long completed = (long) currentBlock - start;
+        long remaining = (long) target - start;
+        return (int) Math.max(0, Math.min(100, Math.round(completed * 100.0 / remaining)));
     }
 
     private void startWalletKit() {
@@ -367,27 +414,18 @@ public class MainActivityPresenter
                                             date
                                     );
 
+                                    int chainHeight =
+                                            safeChainHeight(newKit);
+                                    int peerHeight =
+                                            safePeerHeight(newKit);
                                     int percentage =
-                                            (int) Math.round(
-                                                    pct * 1.0
-                                            );
-
-                                    if (percentage < 0) {
-                                        percentage = 0;
-                                    }
-
-                                    if (percentage > 100) {
-                                        percentage = 100;
-                                    }
+                                            calculateSessionProgress(chainHeight, peerHeight);
 
                                     synchronized (kitLock) {
                                         if (shuttingDown || walletAppKit != newKit) {
                                             return;
                                         }
                                     }
-
-                                    int chainHeight =
-                                            safeChainHeight(newKit);
 
                                     lastPercent = percentage;
                                     notifySyncStateChanged();
@@ -496,6 +534,8 @@ public class MainActivityPresenter
 
                 lastChainHeight =
                         safeChainHeight(kit);
+                syncProgressStartBlock = lastChainHeight;
+                syncProgressTargetBlock = safePeerHeight(kit);
                 noPeerSince = 0L;
                 lastRateHeight = lastChainHeight;
                 lastBlockEventAt = 0L;
@@ -869,6 +909,8 @@ public class MainActivityPresenter
                 if (!shuttingDown) {
 
                     lastPercent = -1;
+                    syncProgressStartBlock = -1;
+                    syncProgressTargetBlock = -1;
 
                     lastChainHeight = -1;
                     noPeerSince = 0L;
@@ -1509,6 +1551,8 @@ public class MainActivityPresenter
 
                 autoRestartCount = 0;
                 lastPercent = -1;
+                syncProgressStartBlock = -1;
+                syncProgressTargetBlock = -1;
                 lastChainHeight = -1;
                 downloadFinished = false;
                 shuttingDown = false;
@@ -1541,6 +1585,8 @@ public class MainActivityPresenter
                 if (restoreNeedsWalletRestart && !shuttingDown) {
                     autoRestartCount = 0;
                     lastPercent = -1;
+                    syncProgressStartBlock = -1;
+                    syncProgressTargetBlock = -1;
                     lastChainHeight = -1;
                     downloadFinished = false;
                     startWalletKit();
@@ -1642,6 +1688,8 @@ public class MainActivityPresenter
                 pendingMnemonicBackupFile = backupOfCurrent;
                 autoRestartCount = 0;
                 lastPercent = -1;
+                syncProgressStartBlock = -1;
+                syncProgressTargetBlock = -1;
                 lastChainHeight = -1;
                 downloadFinished = false;
                 shuttingDown = false;
@@ -1804,6 +1852,8 @@ public class MainActivityPresenter
                     walletReady = false;
                     downloadFinished = false;
                     lastPercent = -1;
+                    syncProgressStartBlock = -1;
+                    syncProgressTargetBlock = -1;
                     lastChainHeight = -1;
                 }
 
@@ -2403,6 +2453,8 @@ public class MainActivityPresenter
                 NetworkConfig.setSyncMode(applicationContext, activeNetwork, newMode);
                 autoRestartCount = 0;
                 lastPercent = -1;
+                syncProgressStartBlock = -1;
+                syncProgressTargetBlock = -1;
                 lastChainHeight = -1;
                 lastProgressAt = System.currentTimeMillis();
                 lastProgressUiUpdateAt = 0L;
@@ -2476,6 +2528,8 @@ public class MainActivityPresenter
 
                 autoRestartCount = 0;
                 lastPercent = -1;
+                syncProgressStartBlock = -1;
+                syncProgressTargetBlock = -1;
                 lastChainHeight = -1;
                 lastProgressAt = System.currentTimeMillis();
                 noPeerSince = 0L;
@@ -2567,10 +2621,12 @@ public class MainActivityPresenter
                     touchProgress();
 
                     final boolean liveSynced = downloadFinished;
-                    int percent = liveSynced ? 100 : Math.max(0, lastPercent);
-                    if (!liveSynced && peerHeight > 0 && chainHeight > 0 && lastPercent < 0) {
-                        percent = Math.min(100, Math.max(0,
-                                (int) Math.round((chainHeight * 100.0) / peerHeight)));
+                    int percent = liveSynced
+                            ? 100
+                            : calculateSessionProgress(chainHeight, peerHeight);
+                    if (!liveSynced && percent != lastPercent) {
+                        lastPercent = percent;
+                        notifySyncStateChanged();
                     }
 
                     long notificationNow = System.currentTimeMillis();
