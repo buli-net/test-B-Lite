@@ -9,22 +9,22 @@
         android:id="@+id/menuSend"
         android:title="@string/menu_send"
         android:icon="@drawable/ic_toolbar_send_24dp"
-        app:showAsAction="always|withText" />
+        android:showAsAction="ifRoom|withText" />
     <item
         android:id="@+id/menuRequestLegacy"
         android:title="@string/wallet_options_request_legacy"
         android:icon="@drawable/ic_menu_request_legacy_24dp"
-        app:showAsAction="never" />
+        android:showAsAction="ifRoom|withText" />
     <item
         android:id="@+id/menuSync"
         android:title="@string/menu_sync"
         android:icon="@drawable/ic_menu_sync_24dp"
-        app:showAsAction="never" />
+        android:showAsAction="ifRoom|withText" />
     <item
         android:id="@+id/menuBackupRecovery"
         android:title="@string/menu_backup_recovery"
         android:icon="@drawable/ic_menu_backup_24dp"
-        app:showAsAction="never" />
+        android:showAsAction="ifRoom|withText" />
     <item
         android:id="@+id/menuSecurity"
         android:title="@string/menu_security"
