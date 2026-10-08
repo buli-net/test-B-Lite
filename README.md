@@ -129,6 +129,17 @@ Use the application responsibly and always maintain secure backups of your walle
 
 ---
 
+## NFC Request Transport
+
+B-Lite keeps the Schildbach-compatible PaymentRequest payload while using a dual transport strategy:
+
+- Modern B-Lite peers: Host Card Emulation (HCE) + NFC Reader Mode.
+- Schildbach/legacy NDEF peers: NDEF MIME `application/bitcoin-paymentrequest` when the platform exposes NDEF push.
+- NFC tags: NDEF PaymentRequest or `bitcoin:` URI can be read while Send is open.
+- QR and Share remain available as transport-independent fallbacks.
+
+The same PaymentRequest is used across the transports, so the wallet does not need a separate request format for each NFC path.
+
 <p align="center">₿ B-Lite
 
 A simple Bitcoin wallet for Android.
