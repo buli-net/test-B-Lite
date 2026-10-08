@@ -9,8 +9,8 @@ import java.util.Arrays;
 import wallet.util.Nfc;
 
 /**
- * Modern NFC transport for B-Lite payment requests.
- * The requester behaves like an NFC card; the other B-Lite device reads the request in reader mode.
+ * Modern NFC transport for payment requests.
+ * The requester behaves like an NFC card; the other device reads the request in reader mode.
  */
 public final class PaymentRequestHceService extends HostApduService {
     private static final byte[] AID = hexToBytes(Nfc.PAYMENT_AID);
