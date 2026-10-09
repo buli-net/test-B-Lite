@@ -129,19 +129,8 @@ Use the application responsibly and always maintain secure backups of your walle
 
 ---
 
-## NFC Request Transport
+## Request and NFC
 
-Bitcoin Wallet keeps the legacy-compatible PaymentRequest payload while using a dual transport strategy:
+Request Coins creates a BIP21 `bitcoin:` URI and QR code from the selected receive address, optional amount, and label. The same request can be copied, shared, opened in another installed Bitcoin wallet, or sent as a standard `application/bitcoin-paymentrequest` NDEF message when legacy NFC push is available on the device.
 
-- Modern Bitcoin Wallet peers: Host Card Emulation (HCE) + NFC Reader Mode.
-- legacy NDEF peers: NDEF MIME `application/bitcoin-paymentrequest` when the platform exposes NDEF push.
-- NFC tags: NDEF PaymentRequest or `bitcoin:` URI can be read while Send is open.
-- QR and Share remain available as transport-independent fallbacks.
-
-The same PaymentRequest is used across the transports, so the wallet does not need a separate request format for each NFC path.
-
-<p align="center">₿ Bitcoin Wallet
-
-A simple Bitcoin wallet for Android.
-
-</p>
+The QR and URI flow is available on Mainnet and Signet; incoming requests are checked against the currently selected network. Android versions without legacy NDEF push can still use QR, copy, share, and local-app handling.
