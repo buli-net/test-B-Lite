@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/requestFromLocalApp"
+        android:title="@string/request_from_local_app"
+        android:showAsAction="never" />
+</menu>

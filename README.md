@@ -1,8 +1,8 @@
-#  ₿itcoin Wallet B-Lite
+#  ₿itcoin Wallet Bitcoin Wallet
 
 Lightweight Bitcoin Wallet for Android
 
-B-Lite is a lightweight, open-source Bitcoin wallet for Android, built with BitcoinJ and designed with a simple, clean interface.
+Bitcoin Wallet is a lightweight, open-source Bitcoin wallet for Android, built with BitcoinJ and designed with a simple, clean interface.
 
 ---
 
@@ -39,7 +39,7 @@ B-Lite is a lightweight, open-source Bitcoin wallet for Android, built with Bitc
 
 📱 Screens
 
-B-Lite is designed around a simple wallet interface without unnecessary graphics or visual components.
+Bitcoin Wallet is designed around a simple wallet interface without unnecessary graphics or visual components.
 
 The interface focuses on:
 
@@ -54,7 +54,7 @@ The interface focuses on:
 
 🔎 Watch-Only
 
-B-Lite supports watch-only Bitcoin addresses.
+Bitcoin Wallet supports watch-only Bitcoin addresses.
 
 A watch-only address can be used to:
 
@@ -68,7 +68,7 @@ Watch-only addresses do not contain private keys and cannot be used to spend Bit
 
 🌐 Network
 
-B-Lite supports:
+Bitcoin Wallet supports:
 
 Bitcoin Mainnet
 Bitcoin Signet
@@ -91,7 +91,7 @@ Each network keeps separate wallet and blockchain storage. Sync mode can be sele
 
 🔐 Security
 
-B-Lite is designed to keep wallet data on the Android device.
+Bitcoin Wallet is designed to keep wallet data on the Android device.
 
 Always maintain a secure backup of your wallet before:
 
@@ -113,7 +113,7 @@ Bitcoin transactions are irreversible. Always verify the recipient address and t
 
 📜 License
 
-B-Lite is licensed under the:
+Bitcoin Wallet is licensed under the:
 
 Apache License 2.0
 
@@ -123,7 +123,7 @@ See `LICENSE` for the complete license text.
 
 ⚠️ Disclaimer
 
-B-Lite is open-source software provided for informational and personal use.
+Bitcoin Wallet is open-source software provided for informational and personal use.
 
 Use the application responsibly and always maintain secure backups of your wallet data.
 
@@ -131,16 +131,16 @@ Use the application responsibly and always maintain secure backups of your walle
 
 ## NFC Request Transport
 
-B-Lite keeps the Schildbach-compatible PaymentRequest payload while using a dual transport strategy:
+Bitcoin Wallet keeps the legacy-compatible PaymentRequest payload while using a dual transport strategy:
 
-- Modern B-Lite peers: Host Card Emulation (HCE) + NFC Reader Mode.
-- Schildbach/legacy NDEF peers: NDEF MIME `application/bitcoin-paymentrequest` when the platform exposes NDEF push.
+- Modern Bitcoin Wallet peers: Host Card Emulation (HCE) + NFC Reader Mode.
+- legacy NDEF peers: NDEF MIME `application/bitcoin-paymentrequest` when the platform exposes NDEF push.
 - NFC tags: NDEF PaymentRequest or `bitcoin:` URI can be read while Send is open.
 - QR and Share remain available as transport-independent fallbacks.
 
 The same PaymentRequest is used across the transports, so the wallet does not need a separate request format for each NFC path.
 
-<p align="center">₿ B-Lite
+<p align="center">₿ Bitcoin Wallet
 
 A simple Bitcoin wallet for Android.
 
