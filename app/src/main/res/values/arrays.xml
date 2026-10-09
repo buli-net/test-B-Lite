@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string-array name="request_address_types">
-        <item>Legacy (P2PKH)</item>
-        <item>Native SegWit (P2WPKH)</item>
-        <item>Nested SegWit (P2SH-P2WPKH)</item>
-    </string-array>
-</resources>

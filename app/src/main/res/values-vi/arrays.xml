@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string-array name="request_address_types">
-        <item>Địa chỉ Legacy (P2PKH)</item>
-        <item>SegWit gốc (P2WPKH)</item>
-        <item>SegWit lồng (P2SH-P2WPKH)</item>
-    </string-array>
-</resources>
