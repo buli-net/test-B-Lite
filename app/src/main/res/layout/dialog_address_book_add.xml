@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp">
+    <EditText
+        android:id="@+id/addressBookNameInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/address_book_name_hint"
+        android:inputType="textCapSentences"
+        android:maxLines="1" />
+    <EditText
+        android:id="@+id/addressBookAddressInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:hint="@string/address_book_address_hint"
+        android:inputType="textUri"
+        android:maxLines="1" />
+</LinearLayout>
