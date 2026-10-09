@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="scan"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_scan_24dp"
+        android:shortcutShortLabel="@string/shortcut_scan"
+        android:shortcutLongLabel="@string/shortcut_scan">
+        <intent
+            android:action="wallet.main.action.SHORTCUT_SCAN"
+            android:targetPackage="wallet.main"
+            android:targetClass="wallet.main.MainActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="send_coins"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_send_24dp"
+        android:shortcutShortLabel="@string/shortcut_send_coins"
+        android:shortcutLongLabel="@string/shortcut_send_coins">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="wallet.main"
+            android:targetClass="wallet.send.SendActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="request_coins"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_request_24dp"
+        android:shortcutShortLabel="@string/shortcut_request_coins"
+        android:shortcutLongLabel="@string/shortcut_request_coins">
+        <intent
+            android:action="wallet.main.action.SHORTCUT_REQUEST"
+            android:targetPackage="wallet.main"
+            android:targetClass="wallet.main.MainActivity" />
+    </shortcut>
+</shortcuts>
