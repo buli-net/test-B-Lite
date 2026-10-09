@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/requestCoinsCopy"
+        android:title="@string/request_copy"
+        android:showAsAction="ifRoom|withText" />
+    <item
+        android:id="@+id/requestCoinsShare"
+        android:title="@string/request_share"
+        android:showAsAction="ifRoom|withText" />
+    <item
+        android:id="@+id/requestCoinsLocalApp"
+        android:title="@string/request_coins_options_local_app_title"
+        android:showAsAction="never" />
+</menu>
