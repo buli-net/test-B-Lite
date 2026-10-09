@@ -261,7 +261,7 @@ public final class RequestCoinsActivity extends BaseActivity {
                 } else if (WalletAddressType.P2WPKH.equals(type)) {
                     address = wallet.freshReceiveAddress(ScriptType.P2WPKH);
                 } else {
-                    final ECKey key = wallet.freshKey(org.bitcoinj.wallet.KeyChain.KeyPurpose.RECEIVE);
+                    final ECKey key = wallet.freshKey(org.bitcoinj.wallet.KeyChain.KeyPurpose.RECEIVE_FUNDS);
                     final Script script = WalletAddressType.scriptForKey(
                             wallet.getParams(), key, WalletAddressType.P2SH_P2WPKH);
                     address = WalletAddressType.addressForKey(
