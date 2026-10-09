@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_card"
+    android:orientation="vertical"
+    android:padding="12dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/importedWalletName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textIsSelectable="true" />
+        <TextView
+            android:id="@+id/importedWalletBalance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textIsSelectable="true" />
+    </LinearLayout>
+    <TextView
+        android:id="@+id/importedWalletType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:textSize="12sp" />
+    <TextView
+        android:id="@+id/importedWalletAddress"
+        android:maxLines="1"
+        android:ellipsize="middle"
+        android:scrollHorizontally="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:breakStrategy="simple"
+        android:fontFamily="monospace"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="12sp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/importedWalletConfirmed"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp"
+            android:text="@string/imported_wallet_confirmed_zero" />
+        <TextView
+            android:id="@+id/importedWalletPending"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:textColor="?android:attr/textColorSecondary"
+            android:textSize="12sp"
+            android:text="@string/imported_wallet_pending_zero" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="end"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/importedWalletSelect"
+            style="@style/WalletSecondaryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="40dp"
+            android:text="@string/imported_wallet_select" />
+        <Button
+            android:id="@+id/importedWalletManage"
+            style="@style/WalletSecondaryButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:minHeight="40dp"
+            android:text="@string/imported_wallet_manage" />
+    </LinearLayout>
+</LinearLayout>
