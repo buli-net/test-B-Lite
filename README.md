@@ -129,6 +129,10 @@ Use the application responsibly and always maintain secure backups of your walle
 
 ---
 
+## Local bitcoinj source integration
+
+B-Lite includes bitcoinj-core 0.17.1 source in `bitcoinj-core/` and references it as a local Gradle project. The app no longer resolves the `org.bitcoinj:bitcoinj-core:0.17.1` Maven artifact. Protobuf Java classes are included as source to avoid downloading the bitcoinj Protobuf Gradle plugin or `protoc` during a normal build. Other app and bitcoinj third-party dependencies, the Android Gradle Plugin, and the Gradle distribution still need to be available locally for a fully offline build.
+
 ## Request and NFC
 
 Request Coins creates a BIP21 `bitcoin:` URI and QR code from the selected receive address, optional amount, and label. The same request can be copied, shared, opened in another installed Bitcoin wallet, or sent as a standard `application/bitcoin-paymentrequest` NDEF message when legacy NFC push is available on the device.

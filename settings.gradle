@@ -17,4 +17,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = 'wallet'
-include ':app'
+include ':app', ':bitcoinj-core'
