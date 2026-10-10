@@ -637,6 +637,8 @@ Không bao giờ gửi WIF cho bất kỳ ai, đưa WIF vào ảnh chụp màn h
     <string name="request_nfc_ready">NFC sẵn sàng. Chạm vào thiết bị khác có NFC.</string>
     <string name="request_nfc_received">Đã nhận yêu cầu Bitcoin qua NFC.</string>
     <string name="request_nfc_invalid">Dịch vụ yêu cầu thanh toán Bitcoin qua NFC không hợp lệ.</string>
+  
+    
     <string name="request_address_type_title">Loại địa chỉ nhận</string>
     <string name="request_address_type_legacy">Legacy (P2PKH)</string>
     <string name="request_address_type_native_segwit">Native SegWit (P2WPKH)</string>
@@ -651,5 +653,6 @@ Không bao giờ gửi WIF cho bất kỳ ai, đưa WIF vào ảnh chụp màn h
     <string name="request_instruction_nfc">Hoặc chạm thiết bị có NFC.</string>
     <string name="request_coins_options_local_app_title">Yêu cầu từ ứng dụng khác trên máy</string>
     <string name="request_no_local_app">Không tìm thấy ứng dụng Bitcoin khác.</string>
+ 
     <string name="nfc_payment_request_service_description">Dịch vụ yêu cầu thanh toán Bitcoin</string>
 </resources>
